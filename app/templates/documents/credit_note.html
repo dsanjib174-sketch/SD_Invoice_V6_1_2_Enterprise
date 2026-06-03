@@ -1,21 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
+
 <section>
-<h2>Credit Note</h2>
-
-<form method="POST">
-<select name="invoice_id" required>
-<option value="">Select Invoice</option>
-{% for i in invoices %}
-<option value="{{ i.id }}">{{ i.invoice_no }} - {{ i.customer_name }} - {{ i.grand_total }}</option>
-{% endfor %}
-</select>
-
-<input name="reason" placeholder="Reason for Credit Note" required>
-<button type="submit">Create Credit Note</button>
-</form>
-
-<br>
+<h2>Credit Notes</h2>
 
 <table border="1" cellpadding="8" cellspacing="0" width="100%">
 <tr>
@@ -24,6 +11,7 @@
 <th>Customer</th>
 <th>Amount</th>
 <th>Reason</th>
+<th>Status</th>
 <th>Date</th>
 </tr>
 
@@ -35,12 +23,14 @@
 <td>{{ n.customer_name }}</td>
 <td>{{ n.amount }}</td>
 <td>{{ n.reason }}</td>
+<td>{{ n.status }}</td>
 <td>{{ n.created_at }}</td>
 </tr>
 {% endfor %}
 {% else %}
-<tr><td colspan="6">No credit notes found.</td></tr>
+<tr><td colspan="7">No credit notes found.</td></tr>
 {% endif %}
 </table>
 </section>
+
 {% endblock %}
