@@ -1,27 +1,44 @@
 {% extends "base.html" %}
 {% block content %}
+
 <section>
 <h2>Tax Invoice Entry</h2>
 <p><b>V6.1.2:</b> Multiple line items, saved invoice register, ledger/GST/Tally posting.</p>
 
 <form method="POST" class="grid">
+
 <div class="doc-section-title">Document Details</div>
+
 <input id="invoiceNo" name="invoice_no" value="{{ doc_no }}" readonly>
-<label><input type="checkbox" id="customInvoiceCheck"> Custom Invoice No</label>
+
+<label>
+  <input type="checkbox" id="customInvoiceCheck">
+  Custom Invoice No
+</label>
+
 <input name="document_date" type="date">
 <input name="due_date" type="date">
 <input name="po_number" placeholder="PO Number">
 <input name="po_date" type="date">
 <input name="place_of_supply" placeholder="Place of Supply">
+
 <select name="payment_terms">
-  <option value="">Payment Terms</option><option>Immediate</option><option>7 Days</option><option>15 Days</option><option>30 Days</option>
+  <option value="">Payment Terms</option>
+  <option>Immediate</option>
+  <option>7 Days</option>
+  <option>15 Days</option>
+  <option>30 Days</option>
 </select>
 
 <div class="doc-section-title">Customer Details</div>
+
 <select id="customerSelect" name="customer_name" required>
   <option value="">Select Customer</option>
-  {% for c in customers %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+  {% for c in customers %}
+  <option value="{{ c }}">{{ c }}</option>
+  {% endfor %}
 </select>
+
 <input id="customerGst" name="customer_gst" placeholder="GSTIN" readonly>
 <input id="customerPan" name="customer_pan" placeholder="PAN" readonly>
 <input id="customerEmail" name="customer_email" placeholder="Email" readonly>
@@ -30,14 +47,37 @@
 <textarea id="shippingAddress" name="shipping_address" placeholder="Ship To Address"></textarea>
 
 <div class="doc-section-title">Item Details with GST</div>
+
 <table class="line-table" id="itemsTable">
-<thead><tr>
-<th>#</th><th>Item / Service</th><th>Description</th><th>HSN/SAC</th><th>Qty</th><th>UOM</th><th>Rate</th><th>Discount</th><th>GST %</th><th>CGST</th><th>SGST</th><th>IGST</th><th>Total</th><th>Action</th>
-</tr></thead>
+<thead>
+<tr>
+<th>#</th>
+<th>Item / Service</th>
+<th>Description</th>
+<th>HSN/SAC</th>
+<th>Qty</th>
+<th>UOM</th>
+<th>Rate</th>
+<th>Discount</th>
+<th>GST %</th>
+<th>CGST</th>
+<th>SGST</th>
+<th>IGST</th>
+<th>Total</th>
+<th>Action</th>
+</tr>
+</thead>
+
 <tbody id="itemsBody">
 <tr class="item-row">
 <td class="rowNo">1</td>
-<td><select class="productSelect" name="product_name[]" required><option value="">Select Product / Service</option></select></td>
+
+<td>
+<select class="productSelect" name="product_name[]" required>
+  <option value="">Select Product / Service</option>
+</select>
+</td>
+
 <td><input name="description[]" placeholder="Description"></td>
 <td><input class="hsnCode" name="hsn_code[]" placeholder="HSN/SAC" readonly></td>
 <td><input class="qty" name="qty[]" type="number" step="0.01" value="1"></td>
@@ -53,10 +93,13 @@
 </tr>
 </tbody>
 </table>
+
 <br>
+
 <button type="button" onclick="addRow()">Add Line Item</button>
 
 <div class="doc-section-title">Tax Summary</div>
+
 <input id="taxableAmount" name="taxable_amount" placeholder="Taxable Amount" readonly>
 <input id="cgstTotal" name="cgst_total" placeholder="CGST Total" readonly>
 <input id="sgstTotal" name="sgst_total" placeholder="SGST Total" readonly>
@@ -67,31 +110,40 @@
 <input id="amountWords" name="amount_words" placeholder="Amount in Words">
 
 <div class="doc-section-title">Terms & Notes</div>
+
 <textarea name="terms" placeholder="Terms & Conditions"></textarea>
 <textarea name="notes" placeholder="Remarks / Notes"></textarea>
 
 <div class="action-row">
-  <button type="submit">Save Invoice</button>
+  <button type="submit">Save</button>
   <a class="button-link" href="/invoice-register">Saved Invoices</a>
+  <button type="button" onclick="window.print()">Print / PDF</button>
 </div>
+
 </form>
 </section>
 
 <script>
 const contracts = {{ contracts|tojson|safe }};
+
 const customerSelect = document.getElementById("customerSelect");
 const itemsBody = document.getElementById("itemsBody");
 
 document.getElementById("customInvoiceCheck").addEventListener("change", function () {
   const invoiceInput = document.getElementById("invoiceNo");
   invoiceInput.readOnly = !this.checked;
-  if (!this.checked) invoiceInput.value = "{{ doc_no }}";
-  else invoiceInput.focus();
+
+  if (!this.checked) {
+    invoiceInput.value = "{{ doc_no }}";
+  } else {
+    invoiceInput.focus();
+  }
 });
 
 customerSelect.addEventListener("change", function () {
   const customerName = this.value;
   const customerRecord = contracts.find(c => c.customer_name === customerName);
+
   if (customerRecord) {
     document.getElementById("customerGst").value = customerRecord.customer_gst || "";
     document.getElementById("customerPan").value = customerRecord.customer_pan || "";
@@ -100,93 +152,177 @@ customerSelect.addEventListener("change", function () {
     document.getElementById("customerAddress").value = customerRecord.customer_address || "";
     document.getElementById("shippingAddress").value = customerRecord.customer_address || "";
   }
+
   refreshAllProductDropdowns();
 });
 
 function getProductsForCustomer() {
   const customerName = customerSelect.value;
-  return contracts.filter(c => c.customer_name === customerName && (c.status || "Active") === "Active");
+
+  return contracts.filter(c =>
+    c.customer_name === customerName &&
+    c.status === "Active"
+  );
 }
+
 function populateProductDropdown(select) {
   select.innerHTML = '<option value="">Select Product / Service</option>';
+
   getProductsForCustomer().forEach(c => {
     const option = document.createElement("option");
+
     option.value = c.product_name;
     option.textContent = c.product_name;
+
     option.dataset.hsn = c.hsn_code || "";
     option.dataset.unit = c.unit || "";
     option.dataset.rate = c.rate || "0";
     option.dataset.gst = c.gst_percent || "0";
+
     select.appendChild(option);
   });
 }
-function refreshAllProductDropdowns() { document.querySelectorAll(".productSelect").forEach(populateProductDropdown); }
+
+function refreshAllProductDropdowns() {
+  document.querySelectorAll(".productSelect").forEach(select => {
+    populateProductDropdown(select);
+  });
+}
+
 function attachRowEvents(row) {
   const productSelect = row.querySelector(".productSelect");
+
   populateProductDropdown(productSelect);
+
   productSelect.addEventListener("change", function () {
     const selected = this.options[this.selectedIndex];
+
     row.querySelector(".hsnCode").value = selected.dataset.hsn || "";
     row.querySelector(".unit").value = selected.dataset.unit || "";
     row.querySelector(".rate").value = selected.dataset.rate || "0";
     row.querySelector(".gstPercent").value = selected.dataset.gst || "0";
+
     calculateRow(row);
   });
-  row.querySelectorAll(".qty, .rate, .discount, .gstPercent").forEach(input => input.addEventListener("input", () => calculateRow(row)));
+
+  row.querySelectorAll(".qty, .rate, .discount, .gstPercent").forEach(input => {
+    input.addEventListener("input", function () {
+      calculateRow(row);
+    });
+  });
 }
+
 function calculateRow(row) {
   const qty = parseFloat(row.querySelector(".qty").value) || 0;
   const rate = parseFloat(row.querySelector(".rate").value) || 0;
   const discount = parseFloat(row.querySelector(".discount").value) || 0;
   const gst = parseFloat(row.querySelector(".gstPercent").value) || 0;
-  const taxable = Math.max((qty * rate) - discount, 0);
-  const gstAmount = taxable * gst / 100;
-  const cgst = gstAmount / 2;
-  const sgst = gstAmount / 2;
+
+  const taxable = (qty * rate) - discount;
+  const totalGst = taxable * gst / 100;
+  const cgst = totalGst / 2;
+  const sgst = totalGst / 2;
   const igst = 0;
+  const lineTotal = taxable + totalGst;
+
   row.querySelector(".cgst").value = cgst.toFixed(2);
   row.querySelector(".sgst").value = sgst.toFixed(2);
   row.querySelector(".igst").value = igst.toFixed(2);
-  row.querySelector(".lineTotal").value = (taxable + gstAmount).toFixed(2);
+  row.querySelector(".lineTotal").value = lineTotal.toFixed(2);
+
   calculateInvoiceTotal();
 }
+
 function calculateInvoiceTotal() {
-  let taxableTotal = 0, cgstTotal = 0, sgstTotal = 0, igstTotal = 0, totalGst = 0;
+  let taxableTotal = 0;
+  let cgstTotal = 0;
+  let sgstTotal = 0;
+  let igstTotal = 0;
+  let totalGst = 0;
+
   document.querySelectorAll(".item-row").forEach(row => {
     const qty = parseFloat(row.querySelector(".qty").value) || 0;
     const rate = parseFloat(row.querySelector(".rate").value) || 0;
     const discount = parseFloat(row.querySelector(".discount").value) || 0;
     const gst = parseFloat(row.querySelector(".gstPercent").value) || 0;
-    const taxable = Math.max((qty * rate) - discount, 0);
+
+    const taxable = (qty * rate) - discount;
     const gstAmount = taxable * gst / 100;
-    taxableTotal += taxable; cgstTotal += gstAmount/2; sgstTotal += gstAmount/2; totalGst += gstAmount;
+    const cgst = gstAmount / 2;
+    const sgst = gstAmount / 2;
+    const igst = 0;
+
+    taxableTotal += taxable;
+    cgstTotal += cgst;
+    sgstTotal += sgst;
+    igstTotal += igst;
+    totalGst += gstAmount;
   });
+
   const roundOff = parseFloat(document.getElementById("roundOff").value) || 0;
+  const grandTotal = taxableTotal + totalGst + roundOff;
+
   document.getElementById("taxableAmount").value = taxableTotal.toFixed(2);
   document.getElementById("cgstTotal").value = cgstTotal.toFixed(2);
   document.getElementById("sgstTotal").value = sgstTotal.toFixed(2);
   document.getElementById("igstTotal").value = igstTotal.toFixed(2);
   document.getElementById("totalGst").value = totalGst.toFixed(2);
-  document.getElementById("grandTotal").value = (taxableTotal + totalGst + roundOff).toFixed(2);
+  document.getElementById("grandTotal").value = grandTotal.toFixed(2);
 }
+
 function addRow() {
   const firstRow = document.querySelector(".item-row");
   const newRow = firstRow.cloneNode(true);
+
   newRow.querySelectorAll("input").forEach(input => {
-    if (input.classList.contains("qty")) input.value = "1";
-    else if (input.classList.contains("rate") || input.classList.contains("discount") || input.classList.contains("gstPercent")) input.value = "0";
-    else input.value = "";
+    if (input.classList.contains("qty")) {
+      input.value = "1";
+    } else if (
+      input.classList.contains("rate") ||
+      input.classList.contains("discount") ||
+      input.classList.contains("gstPercent")
+    ) {
+      input.value = "0";
+    } else {
+      input.value = "";
+    }
   });
-  newRow.querySelector(".productSelect").innerHTML = '<option value="">Select Product / Service</option>';
+
+  newRow.querySelector(".productSelect").innerHTML =
+    '<option value="">Select Product / Service</option>';
+
   itemsBody.appendChild(newRow);
-  updateRowNumbers(); attachRowEvents(newRow); calculateInvoiceTotal();
+
+  updateRowNumbers();
+  attachRowEvents(newRow);
+  calculateInvoiceTotal();
 }
+
 function removeRow(button) {
-  if (document.querySelectorAll(".item-row").length <= 1) { alert("At least one line item is required."); return; }
-  button.closest("tr").remove(); updateRowNumbers(); calculateInvoiceTotal();
+  const rows = document.querySelectorAll(".item-row");
+
+  if (rows.length <= 1) {
+    alert("At least one line item is required.");
+    return;
+  }
+
+  button.closest("tr").remove();
+
+  updateRowNumbers();
+  calculateInvoiceTotal();
 }
-function updateRowNumbers() { document.querySelectorAll(".item-row").forEach((row, i) => row.querySelector(".rowNo").textContent = i + 1); }
+
+function updateRowNumbers() {
+  document.querySelectorAll(".item-row").forEach((row, index) => {
+    row.querySelector(".rowNo").textContent = index + 1;
+  });
+}
+
 document.getElementById("roundOff").addEventListener("input", calculateInvoiceTotal);
-document.querySelectorAll(".item-row").forEach(attachRowEvents);
+
+document.querySelectorAll(".item-row").forEach(row => {
+  attachRowEvents(row);
+});
 </script>
+
 {% endblock %}
