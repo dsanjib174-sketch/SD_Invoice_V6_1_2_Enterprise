@@ -1,36 +1,48 @@
 {% extends "base.html" %}
 {% block content %}
 <section>
-<div class="action-row"><button onclick="window.print()">Print / PDF</button> <a href="/invoice-register">Back</a></div>
 <h2>Tax Invoice</h2>
-<table width="100%">
-<tr><td><b>Invoice No:</b> {{ invoice.invoice_no }}</td><td><b>Date:</b> {{ invoice.document_date or invoice.created_at }}</td></tr>
-<tr><td><b>Customer:</b> {{ invoice.customer_name }}</td><td><b>GSTIN:</b> {{ invoice.customer_gst }}</td></tr>
-<tr><td><b>PAN:</b> {{ invoice.customer_pan }}</td><td><b>Phone:</b> {{ invoice.customer_mobile }}</td></tr>
-<tr><td colspan="2"><b>Billing Address:</b> {{ invoice.customer_address }}</td></tr>
-<tr><td colspan="2"><b>Shipping Address:</b> {{ invoice.shipping_address }}</td></tr>
-</table>
-<br>
+
+<p><b>Invoice No:</b> {{ invoice.invoice_no }}</p>
+<p><b>Customer:</b> {{ invoice.customer_name }}</p>
+<p><b>GST:</b> {{ invoice.customer_gst }}</p>
+<p><b>PAN:</b> {{ invoice.customer_pan }}</p>
+<p><b>Address:</b> {{ invoice.customer_address }}</p>
+
 <table border="1" cellpadding="8" cellspacing="0" width="100%">
-<tr><th>#</th><th>Item</th><th>Description</th><th>HSN</th><th>Qty</th><th>UOM</th><th>Rate</th><th>Discount</th><th>GST%</th><th>CGST</th><th>SGST</th><th>Total</th></tr>
+<tr>
+<th>#</th>
+<th>Product</th>
+<th>HSN</th>
+<th>Qty</th>
+<th>UOM</th>
+<th>Rate</th>
+<th>GST %</th>
+<th>Total</th>
+</tr>
+
 {% for item in invoice.items %}
 <tr>
-<td>{{ loop.index }}</td><td>{{ item.product_name }}</td><td>{{ item.description }}</td><td>{{ item.hsn_code }}</td><td>{{ item.qty }}</td><td>{{ item.unit }}</td><td>{{ item.rate }}</td><td>{{ item.discount }}</td><td>{{ item.gst_percent }}</td><td>{{ item.cgst }}</td><td>{{ item.sgst }}</td><td>{{ item.line_total }}</td>
+<td>{{ loop.index }}</td>
+<td>{{ item.product_name }}</td>
+<td>{{ item.hsn_code }}</td>
+<td>{{ item.qty }}</td>
+<td>{{ item.unit }}</td>
+<td>{{ item.rate }}</td>
+<td>{{ item.gst_percent }}</td>
+<td>{{ item.line_total }}</td>
 </tr>
 {% endfor %}
 </table>
-<br>
-<table align="right" border="1" cellpadding="8" cellspacing="0">
-<tr><td>Taxable Amount</td><td>₹{{ invoice.taxable_amount }}</td></tr>
-<tr><td>CGST</td><td>₹{{ invoice.cgst }}</td></tr>
-<tr><td>SGST</td><td>₹{{ invoice.sgst }}</td></tr>
-<tr><td>IGST</td><td>₹{{ invoice.igst }}</td></tr>
-<tr><td>Total GST</td><td>₹{{ invoice.total_gst }}</td></tr>
-<tr><td>Round Off</td><td>₹{{ invoice.round_off }}</td></tr>
-<tr><th>Grand Total</th><th>₹{{ invoice.grand_total }}</th></tr>
-</table>
-<div style="clear:both"></div>
-<p><b>Terms:</b> {{ invoice.terms }}</p>
-<p><b>Notes:</b> {{ invoice.notes }}</p>
+
+<h3>Tax Summary</h3>
+<p>Taxable Amount: {{ invoice.taxable_amount }}</p>
+<p>CGST: {{ invoice.cgst }}</p>
+<p>SGST: {{ invoice.sgst }}</p>
+<p>IGST: {{ invoice.igst }}</p>
+<p>Total GST: {{ invoice.total_gst }}</p>
+<p><b>Grand Total: {{ invoice.grand_total }}</b></p>
+
+<button onclick="window.print()">Print / PDF</button>
 </section>
 {% endblock %}
