@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+
+<section>
+<h2>Tally/SAP Export</h2>
+
+<a href="/tally/export">
+  <button type="button">Export Tally</button>
+</a>
+
+<a href="/sap/export">
+  <button type="button">Export SAP</button>
+</a>
+
+<br><br>
+
+<table border="1" cellpadding="8" cellspacing="0" width="100%">
+<tr>
+<th>Voucher No</th>
+<th>Voucher Type</th>
+<th>Customer</th>
+<th>Amount</th>
+<th>Status</th>
+<th>Date</th>
+</tr>
+
+{% if records %}
+  {% for r in records %}
+  <tr>
+    <td>{{ r.voucher_no }}</td>
+    <td>{{ r.voucher_type }}</td>
+    <td>{{ r.customer_name }}</td>
+    <td>{{ r.amount }}</td>
+    <td>{{ r.status }}</td>
+    <td>{{ r.created_at }}</td>
+  </tr>
+  {% endfor %}
+{% else %}
+<tr>
+<td colspan="6">No records.</td>
+</tr>
+{% endif %}
+</table>
+
+</section>
+
+{% endblock %}
