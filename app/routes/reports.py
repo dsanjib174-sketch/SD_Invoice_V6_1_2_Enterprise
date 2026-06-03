@@ -33,9 +33,9 @@ def visible_data(data):
     return [d for d in data if d.get("client_email") == current_user_email()]
 
 
-@reports_bp.route("/gst")
+@reports_bp.route("/gst-gsp")
 @login_required
-def gst():
+def gst_gsp():
     records = visible_data(load_json(GST_FILE))
     return render_template("reports/gst.html", records=records)
 
