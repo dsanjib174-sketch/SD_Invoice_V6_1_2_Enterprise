@@ -1,7 +1,36 @@
 {% extends "base.html" %}
 {% block content %}
+
 <section>
-<h2>Company/Profile & Branding</h2>
-<form class="grid"><input placeholder="Company Name"><input placeholder="GSTIN"><label>Logo<input type="file"></label><label>Signature<input type="file"></label><label>Payment QR<input type="file"></label><textarea placeholder="Terms"></textarea><button>Save</button></form>
+<h2>Company Profile</h2>
+
+<form method="POST" enctype="multipart/form-data" class="grid">
+  <input name="company_name" value="{{ profile.get('company_name','') }}" placeholder="Company Name" required>
+  <input name="gst_number" value="{{ profile.get('gst_number','') }}" placeholder="GST Number">
+  <input name="pan_number" value="{{ profile.get('pan_number','') }}" placeholder="PAN Number">
+  <textarea name="address" placeholder="Company Address">{{ profile.get('address','') }}</textarea>
+  <input name="phone" value="{{ profile.get('phone','') }}" placeholder="Phone">
+  <input name="email" value="{{ profile.get('email','') }}" placeholder="Email">
+  <input name="state" value="{{ profile.get('state','') }}" placeholder="State">
+
+  <h3>Bank Details</h3>
+  <input name="bank_name" value="{{ profile.get('bank_name','') }}" placeholder="Bank Name">
+  <input name="account_number" value="{{ profile.get('account_number','') }}" placeholder="Account Number">
+  <input name="ifsc_code" value="{{ profile.get('ifsc_code','') }}" placeholder="IFSC Code">
+  <input name="account_holder" value="{{ profile.get('account_holder','') }}" placeholder="Account Holder Name">
+
+  <h3>Logo & Terms</h3>
+  <input type="file" name="logo">
+  <textarea name="terms" placeholder="Terms and Conditions">{{ profile.get('terms','') }}</textarea>
+
+  <button type="submit">Save Profile</button>
+</form>
+
+{% if profile.get('logo_url') %}
+<br>
+<img src="{{ profile.get('logo_url') }}" style="max-height:80px;">
+{% endif %}
+
 </section>
+
 {% endblock %}
