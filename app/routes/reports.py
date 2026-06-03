@@ -1,6 +1,9 @@
 from flask import Blueprint, render_template, current_app, session, Response
 from .auth import login_required
-import os, json, csv, io
+import os
+import json
+import csv
+import io
 
 reports_bp = Blueprint("reports", __name__)
 
@@ -8,16 +11,30 @@ GST_FILE = "gst_reports.json"
 
 
 def _json_path(filename):
-    return os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
+    upload_folder = current_app.config.get("UPLOAD_FOLDER")
+
+    if not upload_folder:
+        upload_folder = os.path.join(
+            os.path.abspath(os.path.dirname(current_app.root_path)),
+            "app",
+            "data"
+        )
+
+    os.makedirs(upload_folder, exist_ok=True)
+    return os.path.join(upload_folder, filename)
 
 
 def load_json(filename):
     path = _json_path(filename)
+
     if not os.path.exists(path):
         return []
 
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
 
 
 def current_user_email():
@@ -39,9 +56,15 @@ def visible_data(data):
 
 
 @reports_bp.route("/gst")
-@reports_bp.route("/gst-gsp")
 @login_required
 def gst():
+    records = visible_data(load_json(GST_FILE))
+    return render_template("reports/gst.html", records=records)
+
+
+@reports_bp.route("/gst-gsp")
+@login_required
+def gst_gsp():
     records = visible_data(load_json(GST_FILE))
     return render_template("reports/gst.html", records=records)
 
