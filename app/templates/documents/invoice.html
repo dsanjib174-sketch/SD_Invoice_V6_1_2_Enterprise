@@ -3,7 +3,7 @@
 
 <section>
 <h2>Tax Invoice Entry</h2>
-<p><b>V6.1.2:</b> Multiple line items, saved invoice register, ledger/GST/Tally posting.</p>
+<p><b>V6.1.2:</b> 15 default line items, add more rows, saved invoice register, ledger/GST/Tally posting.</p>
 
 <form method="POST" class="grid">
 
@@ -69,11 +69,12 @@
 </thead>
 
 <tbody id="itemsBody">
+{% for i in range(15) %}
 <tr class="item-row">
-<td class="rowNo">1</td>
+<td class="rowNo">{{ i + 1 }}</td>
 
 <td>
-<select class="productSelect" name="product_name[]" required>
+<select class="productSelect" name="product_name[]">
   <option value="">Select Product / Service</option>
 </select>
 </td>
@@ -91,12 +92,13 @@
 <td><input class="lineTotal" name="line_total[]" readonly></td>
 <td><button type="button" onclick="removeRow(this)">Remove</button></td>
 </tr>
+{% endfor %}
 </tbody>
 </table>
 
 <br>
 
-<button type="button" onclick="addRow()">Add Line Item</button>
+<button type="button" onclick="addRow()">+ Add More Line Item</button>
 
 <div class="doc-section-title">Tax Summary</div>
 
@@ -115,7 +117,7 @@
 <textarea name="notes" placeholder="Remarks / Notes"></textarea>
 
 <div class="action-row">
-  <button type="submit">Save</button>
+  <button type="submit">Save Invoice</button>
   <a class="button-link" href="/invoice-register">Saved Invoices</a>
   <button type="button" onclick="window.print()">Print / PDF</button>
 </div>
@@ -125,7 +127,6 @@
 
 <script>
 const contracts = {{ contracts|tojson|safe }};
-
 const customerSelect = document.getElementById("customerSelect");
 const itemsBody = document.getElementById("itemsBody");
 
@@ -166,21 +167,21 @@ function getProductsForCustomer() {
 }
 
 function populateProductDropdown(select) {
+  const currentValue = select.value;
   select.innerHTML = '<option value="">Select Product / Service</option>';
 
   getProductsForCustomer().forEach(c => {
     const option = document.createElement("option");
-
     option.value = c.product_name;
     option.textContent = c.product_name;
-
     option.dataset.hsn = c.hsn_code || "";
     option.dataset.unit = c.unit || "";
     option.dataset.rate = c.rate || "0";
     option.dataset.gst = c.gst_percent || "0";
-
     select.appendChild(option);
   });
+
+  select.value = currentValue;
 }
 
 function refreshAllProductDropdowns() {
@@ -218,7 +219,7 @@ function calculateRow(row) {
   const discount = parseFloat(row.querySelector(".discount").value) || 0;
   const gst = parseFloat(row.querySelector(".gstPercent").value) || 0;
 
-  const taxable = (qty * rate) - discount;
+  const taxable = Math.max((qty * rate) - discount, 0);
   const totalGst = taxable * gst / 100;
   const cgst = totalGst / 2;
   const sgst = totalGst / 2;
@@ -241,12 +242,15 @@ function calculateInvoiceTotal() {
   let totalGst = 0;
 
   document.querySelectorAll(".item-row").forEach(row => {
+    const product = row.querySelector(".productSelect").value;
+    if (!product) return;
+
     const qty = parseFloat(row.querySelector(".qty").value) || 0;
     const rate = parseFloat(row.querySelector(".rate").value) || 0;
     const discount = parseFloat(row.querySelector(".discount").value) || 0;
     const gst = parseFloat(row.querySelector(".gstPercent").value) || 0;
 
-    const taxable = (qty * rate) - discount;
+    const taxable = Math.max((qty * rate) - discount, 0);
     const gstAmount = taxable * gst / 100;
     const cgst = gstAmount / 2;
     const sgst = gstAmount / 2;
@@ -292,7 +296,6 @@ function addRow() {
     '<option value="">Select Product / Service</option>';
 
   itemsBody.appendChild(newRow);
-
   updateRowNumbers();
   attachRowEvents(newRow);
   calculateInvoiceTotal();
@@ -307,7 +310,6 @@ function removeRow(button) {
   }
 
   button.closest("tr").remove();
-
   updateRowNumbers();
   calculateInvoiceTotal();
 }
