@@ -235,10 +235,15 @@ def invoice_preview(invoice_id):
 def cancel_invoice(invoice_id):
     invoices = load_json(INVOICE_FILE)
     credit_notes = load_json(CREDIT_NOTE_FILE)
+    ledger = load_json(LEDGER_FILE)
+    gst = load_json(GST_FILE)
+    tally = load_json(TALLY_FILE)
+
     user_email = current_user_email()
 
     for inv in invoices:
         if inv.get("id") == invoice_id:
+
             if not is_superadmin() and inv.get("client_email") != user_email:
                 flash("You cannot cancel another client's invoice.", "error")
                 return redirect(url_for("documents.invoice_register"))
@@ -253,7 +258,7 @@ def cancel_invoice(invoice_id):
             inv["cancel_reason"] = reason
             inv["cancelled_at"] = datetime.now().strftime("%d-%m-%Y %I:%M %p")
 
-            credit_notes.insert(0, {
+            credit_note = {
                 "id": uuid.uuid4().hex,
                 "credit_note_no": generate_doc_no("CN", credit_notes),
                 "invoice_id": inv.get("id"),
@@ -264,21 +269,62 @@ def cancel_invoice(invoice_id):
                 "status": "Created",
                 "client_email": inv.get("client_email"),
                 "created_at": datetime.now().strftime("%d-%m-%Y %I:%M %p")
+            }
+
+            credit_notes.insert(0, credit_note)
+
+            ledger.insert(0, {
+                "id": uuid.uuid4().hex,
+                "invoice_id": inv.get("id"),
+                "invoice_no": credit_note["credit_note_no"],
+                "customer_name": inv.get("customer_name"),
+                "debit": "0",
+                "credit": inv.get("grand_total"),
+                "amount": inv.get("grand_total"),
+                "type": "Credit Note",
+                "status": "Created",
+                "client_email": inv.get("client_email"),
+                "created_at": credit_note["created_at"]
+            })
+
+            gst.insert(0, {
+                "id": uuid.uuid4().hex,
+                "invoice_id": inv.get("id"),
+                "invoice_no": credit_note["credit_note_no"],
+                "customer_name": inv.get("customer_name"),
+                "taxable_amount": "-" + str(inv.get("taxable_amount", "0")),
+                "cgst": "-" + str(inv.get("cgst", "0")),
+                "sgst": "-" + str(inv.get("sgst", "0")),
+                "igst": "-" + str(inv.get("igst", "0")),
+                "total_gst": "-" + str(inv.get("total_gst", "0")),
+                "grand_total": "-" + str(inv.get("grand_total", "0")),
+                "status": "Credit Note",
+                "client_email": inv.get("client_email"),
+                "created_at": credit_note["created_at"]
+            })
+
+            tally.insert(0, {
+                "id": uuid.uuid4().hex,
+                "invoice_id": inv.get("id"),
+                "voucher_no": credit_note["credit_note_no"],
+                "voucher_type": "Credit Note",
+                "customer_name": inv.get("customer_name"),
+                "amount": "-" + str(inv.get("grand_total", "0")),
+                "status": "Created",
+                "client_email": inv.get("client_email"),
+                "created_at": credit_note["created_at"]
             })
 
             break
 
     save_json(INVOICE_FILE, invoices)
     save_json(CREDIT_NOTE_FILE, credit_notes)
-    flash("Invoice cancelled and credit note created.", "success")
+    save_json(LEDGER_FILE, ledger)
+    save_json(GST_FILE, gst)
+    save_json(TALLY_FILE, tally)
+
+    flash("Invoice cancelled, credit note created and reverse entries posted.", "success")
     return redirect(url_for("documents.invoice_register"))
-
-
-@documents_bp.route("/credit-note")
-@login_required
-def credit_note():
-    return render_template("documents/credit_note.html", notes=visible_data(load_json(CREDIT_NOTE_FILE)))
-
 
 @documents_bp.route("/document-register")
 @login_required
