@@ -12,6 +12,7 @@ GST_FILE = "gst_reports.json"
 TALLY_FILE = "tally_exports.json"
 CREDIT_NOTE_FILE = "credit_notes.json"
 RECEIPT_FILE = "receipts.json"
+PROFILE_FILE = "client_profiles.json"
 
 
 def _json_path(filename):
@@ -44,6 +45,11 @@ def visible_data(data):
     if is_superadmin():
         return data
     return [d for d in data if d.get("client_email") == current_user_email()]
+
+
+def get_client_profile(client_email):
+    profiles = load_json(PROFILE_FILE)
+    return next((p for p in profiles if p.get("client_email") == client_email), {})
 
 
 def get_financial_year():
@@ -196,7 +202,6 @@ def invoice():
         totals = request.form.getlist("line_total[]")
 
         items = []
-
         for i in range(len(product_names)):
             if product_names[i].strip():
                 items.append({
@@ -227,7 +232,6 @@ def invoice():
             "po_date": request.form.get("po_date", ""),
             "place_of_supply": request.form.get("place_of_supply", ""),
             "payment_terms": request.form.get("payment_terms", ""),
-
             "customer_name": request.form.get("customer_name", ""),
             "customer_gst": request.form.get("customer_gst", ""),
             "customer_pan": request.form.get("customer_pan", ""),
@@ -235,9 +239,7 @@ def invoice():
             "customer_mobile": request.form.get("customer_mobile", ""),
             "customer_address": request.form.get("customer_address", ""),
             "shipping_address": request.form.get("shipping_address", ""),
-
             "items": items,
-
             "taxable_amount": request.form.get("taxable_amount", "0"),
             "cgst": request.form.get("cgst_total", "0"),
             "sgst": request.form.get("sgst_total", "0"),
@@ -245,10 +247,9 @@ def invoice():
             "total_gst": request.form.get("total_gst", "0"),
             "round_off": request.form.get("round_off", "0"),
             "grand_total": request.form.get("grand_total", "0"),
-
+            "amount_words": request.form.get("amount_words", ""),
             "terms": request.form.get("terms", ""),
             "notes": request.form.get("notes", ""),
-
             "status": "Generated",
             "client_email": user_email,
             "created_by": user_email,
@@ -288,7 +289,13 @@ def invoice_preview(invoice_id):
     if not invoice_data:
         return "Invoice not found", 404
 
-    return render_template("documents/invoice_preview.html", invoice=invoice_data)
+    client_profile = get_client_profile(invoice_data.get("client_email", ""))
+
+    return render_template(
+        "documents/invoice_preview.html",
+        invoice=invoice_data,
+        client_profile=client_profile
+    )
 
 
 @documents_bp.route("/invoice/cancel/<invoice_id>", methods=["POST"])
@@ -300,7 +307,6 @@ def cancel_invoice(invoice_id):
 
     for inv in invoices:
         if inv.get("id") == invoice_id:
-
             if not is_superadmin() and inv.get("client_email") != user_email:
                 flash("You cannot cancel another client's invoice.", "error")
                 return redirect(url_for("documents.invoice_register"))
@@ -358,13 +364,15 @@ def receipts():
         invoice_data = next((i for i in invoices if i.get("id") == invoice_id), None)
 
         if invoice_data:
+            amount_received = request.form.get("amount_received", "0")
+
             receipts_data.insert(0, {
                 "id": uuid.uuid4().hex,
                 "receipt_no": generate_doc_no("RCPT", receipts_data),
                 "invoice_id": invoice_data.get("id"),
                 "invoice_no": invoice_data.get("invoice_no"),
                 "customer_name": invoice_data.get("customer_name"),
-                "amount_received": request.form.get("amount_received", "0"),
+                "amount_received": amount_received,
                 "payment_mode": request.form.get("payment_mode", ""),
                 "payment_date": request.form.get("payment_date", ""),
                 "remarks": request.form.get("remarks", ""),
@@ -372,8 +380,23 @@ def receipts():
                 "created_at": datetime.now().strftime("%d-%m-%Y %I:%M %p")
             })
 
+            ledger = load_json(LEDGER_FILE)
+            ledger.insert(0, {
+                "id": uuid.uuid4().hex,
+                "invoice_no": invoice_data.get("invoice_no"),
+                "customer_name": invoice_data.get("customer_name"),
+                "debit": "0",
+                "credit": amount_received,
+                "amount": amount_received,
+                "type": "Receipt",
+                "status": "Received",
+                "client_email": user_email,
+                "created_at": datetime.now().strftime("%d-%m-%Y %I:%M %p")
+            })
+
             save_json(RECEIPT_FILE, receipts_data)
-            flash("Receipt saved successfully.", "success")
+            save_json(LEDGER_FILE, ledger)
+            flash("Receipt saved successfully and posted to ledger.", "success")
 
         return redirect(url_for("documents.receipts"))
 
