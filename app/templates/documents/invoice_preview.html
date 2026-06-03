@@ -4,68 +4,61 @@
 <style>
 .invoice-box {
   background: #fff;
-  padding: 30px;
-  max-width: 900px;
+  max-width: 1000px;
   margin: auto;
-  color: #111;
+  padding: 20px;
   font-family: Arial, sans-serif;
-}
-
-.invoice-header {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 2px solid #111;
-  padding-bottom: 15px;
+  color: #000;
 }
 
 .invoice-title {
-  text-align: right;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  border-bottom: 1px solid #333;
+  padding-bottom: 5px;
 }
 
-.invoice-title h1 {
-  margin: 0;
-  font-size: 30px;
-}
-
-.invoice-section {
-  margin-top: 20px;
-}
-
-.invoice-table {
+.top-table, .main-table, .tax-table, .bottom-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 15px;
 }
 
-.invoice-table th,
-.invoice-table td {
+.top-table td, .main-table th, .main-table td,
+.tax-table th, .tax-table td, .bottom-table td {
   border: 1px solid #333;
-  padding: 8px;
+  padding: 6px;
   font-size: 13px;
 }
 
-.invoice-table th {
+.company-block {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+}
+
+.company-logo {
+  max-width: 90px;
+  max-height: 80px;
+}
+
+.company-name {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.right-title {
+  font-weight: bold;
   background: #f2f2f2;
 }
 
-.total-box {
-  width: 350px;
-  margin-left: auto;
-  margin-top: 20px;
-}
-
-.total-box table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.total-box td {
-  border: 1px solid #333;
-  padding: 8px;
+.amount-box {
+  text-align: right;
+  font-weight: bold;
 }
 
 .print-btn {
-  margin: 20px auto;
+  margin: 15px auto;
   display: block;
 }
 
@@ -85,7 +78,7 @@
     width: 100%;
     max-width: 100%;
     margin: 0;
-    padding: 20px;
+    padding: 10px;
   }
 
   .print-btn,
@@ -102,98 +95,130 @@
 
 <div class="invoice-box">
 
-  <div class="invoice-header">
-    <div>
-      <h2>SMART DADA SOLUTION</h2>
-      <p>SD Invoice Enterprise</p>
-    </div>
+  <div class="invoice-title">Tax Invoice</div>
 
-    <div class="invoice-title">
-      <h1>TAX INVOICE</h1>
-      <p><b>Invoice No:</b> {{ invoice.get("invoice_no", "") }}</p>
-      <p><b>Date:</b> {{ invoice.get("document_date", invoice.get("created_at", "")) }}</p>
-    </div>
-  </div>
+  <table class="top-table">
+    <tr>
+      <td style="width:55%;" rowspan="4">
+        <div class="company-block">
+          {% if client_profile.get("logo_url") %}
+          <img class="company-logo" src="{{ client_profile.get('logo_url') }}">
+          {% endif %}
+          <div>
+            <div class="company-name">{{ client_profile.get("company_name", "") }}</div>
+            <div>{{ client_profile.get("address", "") }}</div>
+            <div>Phone no.: {{ client_profile.get("phone", "") }}</div>
+            <div>Email: {{ client_profile.get("email", "") }}</div>
+            <div>GSTIN: {{ client_profile.get("gst_number", "") }}</div>
+            <div>PAN: {{ client_profile.get("pan_number", "") }}</div>
+            <div>State: {{ client_profile.get("state", "") }}</div>
+          </div>
+        </div>
+      </td>
+      <td class="right-title">Invoice No.</td>
+      <td>{{ invoice.get("invoice_no", "") }}</td>
+    </tr>
+    <tr>
+      <td class="right-title">Date</td>
+      <td>{{ invoice.get("document_date", invoice.get("created_at", "")) }}</td>
+    </tr>
+    <tr>
+      <td class="right-title">Place of supply</td>
+      <td>{{ invoice.get("place_of_supply", "") }}</td>
+    </tr>
+    <tr>
+      <td class="right-title">PO number</td>
+      <td>{{ invoice.get("po_number", "") }}</td>
+    </tr>
+  </table>
 
-  <div class="invoice-section">
-    <h3>Bill To</h3>
-    <p><b>{{ invoice.get("customer_name", "") }}</b></p>
-    <p>GSTIN: {{ invoice.get("customer_gst", "") }}</p>
-    <p>PAN: {{ invoice.get("customer_pan", "") }}</p>
-    <p>Email: {{ invoice.get("customer_email", "") }}</p>
-    <p>Mobile: {{ invoice.get("customer_mobile", "") }}</p>
-    <p>Address: {{ invoice.get("customer_address", "") }}</p>
-  </div>
+  <table class="top-table">
+    <tr>
+      <td style="width:50%;">
+        <b>Bill To</b><br>
+        <b>{{ invoice.get("customer_name", "") }}</b><br>
+        {{ invoice.get("customer_address", "") }}<br>
+        GSTIN: {{ invoice.get("customer_gst", "") }}<br>
+        PAN: {{ invoice.get("customer_pan", "") }}
+      </td>
+      <td>
+        <b>Ship To</b><br>
+        {{ invoice.get("shipping_address", invoice.get("customer_address", "")) }}
+      </td>
+    </tr>
+  </table>
 
-  <table class="invoice-table">
+  <table class="main-table">
     <tr>
       <th>#</th>
-      <th>Item / Service</th>
+      <th>Item name</th>
       <th>Description</th>
       <th>HSN/SAC</th>
-      <th>Qty</th>
-      <th>UOM</th>
-      <th>Rate</th>
-      <th>GST %</th>
-      <th>Total</th>
+      <th>Quantity</th>
+      <th>Unit</th>
+      <th>Price/Unit</th>
+      <th>GST</th>
+      <th>Amount</th>
     </tr>
 
     {% set invoice_items = invoice.get("items", []) %}
+    {% for item in invoice_items %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ item.get("product_name", "") }}</td>
+      <td>{{ item.get("description", "") }}</td>
+      <td>{{ item.get("hsn_code", "") }}</td>
+      <td>{{ item.get("qty", "") }}</td>
+      <td>{{ item.get("unit", "") }}</td>
+      <td>₹ {{ item.get("rate", "") }}</td>
+      <td>{{ item.get("gst_percent", "") }}%</td>
+      <td>₹ {{ item.get("line_total", "") }}</td>
+    </tr>
+    {% endfor %}
 
-    {% if invoice_items %}
-      {% for item in invoice_items %}
-      <tr>
-        <td>{{ loop.index }}</td>
-        <td>{{ item.get("product_name", "") }}</td>
-        <td>{{ item.get("description", "") }}</td>
-        <td>{{ item.get("hsn_code", "") }}</td>
-        <td>{{ item.get("qty", "") }}</td>
-        <td>{{ item.get("unit", "") }}</td>
-        <td>{{ item.get("rate", "") }}</td>
-        <td>{{ item.get("gst_percent", "") }}</td>
-        <td>{{ item.get("line_total", "") }}</td>
-      </tr>
-      {% endfor %}
-    {% else %}
-      <tr>
-        <td colspan="9">No line items found.</td>
-      </tr>
-    {% endif %}
+    <tr>
+      <td colspan="8" class="amount-box">Total</td>
+      <td><b>₹ {{ invoice.get("grand_total", "0") }}</b></td>
+    </tr>
   </table>
 
-  <div class="total-box">
-    <table>
-      <tr>
-        <td>Taxable Amount</td>
-        <td>{{ invoice.get("taxable_amount", "0") }}</td>
-      </tr>
-      <tr>
-        <td>CGST</td>
-        <td>{{ invoice.get("cgst", "0") }}</td>
-      </tr>
-      <tr>
-        <td>SGST</td>
-        <td>{{ invoice.get("sgst", "0") }}</td>
-      </tr>
-      <tr>
-        <td>IGST</td>
-        <td>{{ invoice.get("igst", "0") }}</td>
-      </tr>
-      <tr>
-        <td>Total GST</td>
-        <td>{{ invoice.get("total_gst", "0") }}</td>
-      </tr>
-      <tr>
-        <td><b>Grand Total</b></td>
-        <td><b>{{ invoice.get("grand_total", "0") }}</b></td>
-      </tr>
-    </table>
-  </div>
+  <table class="bottom-table">
+    <tr>
+      <td style="width:50%;">
+        <b>Invoice Amount in Words</b><br>
+        {{ invoice.get("amount_words", "") }}
+      </td>
+      <td>
+        <b>Amounts</b><br>
+        Taxable Amount: ₹ {{ invoice.get("taxable_amount", "0") }}<br>
+        CGST: ₹ {{ invoice.get("cgst", "0") }}<br>
+        SGST: ₹ {{ invoice.get("sgst", "0") }}<br>
+        IGST: ₹ {{ invoice.get("igst", "0") }}<br>
+        Total GST: ₹ {{ invoice.get("total_gst", "0") }}<br>
+        <b>Total: ₹ {{ invoice.get("grand_total", "0") }}</b>
+      </td>
+    </tr>
+  </table>
 
-  <div class="invoice-section">
-    <p><b>Terms:</b> {{ invoice.get("terms", "") }}</p>
-    <p><b>Notes:</b> {{ invoice.get("notes", "") }}</p>
-  </div>
+  <table class="bottom-table">
+    <tr>
+      <td style="width:35%;">
+        <b>Bank Details</b><br>
+        Name: {{ client_profile.get("bank_name", "") }}<br>
+        Account No.: {{ client_profile.get("account_number", "") }}<br>
+        IFSC code: {{ client_profile.get("ifsc_code", "") }}<br>
+        Account holder's name: {{ client_profile.get("account_holder", "") }}
+      </td>
+      <td style="width:40%;">
+        <b>Terms and conditions</b><br>
+        {{ client_profile.get("terms", invoice.get("terms", "")) }}
+      </td>
+      <td style="text-align:center;">
+        For: {{ client_profile.get("company_name", "") }}<br><br><br>
+        <b>Authorized Signatory</b>
+      </td>
+    </tr>
+  </table>
 
 </div>
 
