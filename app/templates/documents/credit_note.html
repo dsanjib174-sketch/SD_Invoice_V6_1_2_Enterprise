@@ -2,25 +2,45 @@
 {% block content %}
 <section>
 <h2>Credit Note</h2>
-<form method="POST" class="grid">
-<input name="credit_note_no" value="{{ doc_no }}" readonly>
+
+<form method="POST">
 <select name="invoice_id" required>
-  <option value="">Select Invoice</option>
-  {% for inv in invoices %}<option value="{{ inv.id }}">{{ inv.invoice_no }} - {{ inv.customer_name }} - ₹{{ inv.grand_total }}</option>{% endfor %}
+<option value="">Select Invoice</option>
+{% for i in invoices %}
+<option value="{{ i.id }}">{{ i.invoice_no }} - {{ i.customer_name }} - {{ i.grand_total }}</option>
+{% endfor %}
 </select>
-<input name="amount" placeholder="Credit Amount">
-<textarea name="reason" placeholder="Reason"></textarea>
+
+<input name="reason" placeholder="Reason for Credit Note" required>
 <button type="submit">Create Credit Note</button>
 </form>
+
 <br>
-<h3>Saved Credit Notes</h3>
+
 <table border="1" cellpadding="8" cellspacing="0" width="100%">
-<tr><th>Credit Note No</th><th>Invoice No</th><th>Customer</th><th>Amount</th><th>Reason</th><th>Date</th></tr>
-{% if credit_notes %}
-{% for cn in credit_notes %}
-<tr><td>{{ cn.credit_note_no }}</td><td>{{ cn.invoice_no }}</td><td>{{ cn.customer_name }}</td><td>₹{{ cn.amount }}</td><td>{{ cn.reason }}</td><td>{{ cn.created_at }}</td></tr>
+<tr>
+<th>Credit Note No</th>
+<th>Invoice No</th>
+<th>Customer</th>
+<th>Amount</th>
+<th>Reason</th>
+<th>Date</th>
+</tr>
+
+{% if notes %}
+{% for n in notes %}
+<tr>
+<td>{{ n.credit_note_no }}</td>
+<td>{{ n.invoice_no }}</td>
+<td>{{ n.customer_name }}</td>
+<td>{{ n.amount }}</td>
+<td>{{ n.reason }}</td>
+<td>{{ n.created_at }}</td>
+</tr>
 {% endfor %}
-{% else %}<tr><td colspan="6">No credit notes found.</td></tr>{% endif %}
+{% else %}
+<tr><td colspan="6">No credit notes found.</td></tr>
+{% endif %}
 </table>
 </section>
 {% endblock %}
