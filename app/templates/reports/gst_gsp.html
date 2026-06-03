@@ -27,16 +27,16 @@
 {% if records %}
   {% for r in records %}
   <tr>
-    <td>{{ r.invoice_no }}</td>
-    <td>{{ r.customer_name }}</td>
-    <td>{{ r.taxable_amount }}</td>
-    <td>{{ r.cgst }}</td>
-    <td>{{ r.sgst }}</td>
-    <td>{{ r.igst }}</td>
-    <td>{{ r.total_gst }}</td>
-    <td>{{ r.grand_total }}</td>
-    <td>{{ r.status }}</td>
-    <td>{{ r.created_at }}</td>
+    <td>{{ r.get("invoice_no", "") }}</td>
+    <td>{{ r.get("customer_name", "") }}</td>
+    <td>{{ r.get("taxable_amount", "0") }}</td>
+    <td>{{ r.get("cgst", "0") }}</td>
+    <td>{{ r.get("sgst", "0") }}</td>
+    <td>{{ r.get("igst", "0") }}</td>
+    <td>{{ r.get("total_gst", "0") }}</td>
+    <td>{{ r.get("grand_total", "0") }}</td>
+    <td>{{ r.get("status", "") }}</td>
+    <td>{{ r.get("created_at", "") }}</td>
   </tr>
   {% endfor %}
 {% else %}
