@@ -69,32 +69,31 @@
 </thead>
 
 <tbody id="itemsBody">
-{% for i in range(15) %}
+{% for i in range(1, 16) %}
 <tr class="item-row">
-<td class="rowNo">{{ i + 1 }}</td>
+  <td class="rowNo">{{ i }}</td>
 
-<td>
-<select class="productSelect" name="product_name[]">
-  <option value="">Select Product / Service</option>
-</select>
-</td>
+  <td>
+    <select class="productSelect" name="product_name[]">
+      <option value="">Select Product / Service</option>
+    </select>
+  </td>
 
-<td><input name="description[]" placeholder="Description"></td>
-<td><input class="hsnCode" name="hsn_code[]" placeholder="HSN/SAC" readonly></td>
-<td><input class="qty" name="qty[]" type="number" step="0.01" value="1"></td>
-<td><input class="unit" name="unit[]" placeholder="UOM" readonly></td>
-<td><input class="rate" name="rate[]" type="number" step="0.01" value="0"></td>
-<td><input class="discount" name="discount[]" type="number" step="0.01" value="0"></td>
-<td><input class="gstPercent" name="gst_percent[]" type="number" step="0.01" value="0"></td>
-<td><input class="cgst" name="cgst[]" readonly></td>
-<td><input class="sgst" name="sgst[]" readonly></td>
-<td><input class="igst" name="igst[]" readonly></td>
-<td><input class="lineTotal" name="line_total[]" readonly></td>
-<td><button type="button" onclick="removeRow(this)">Remove</button></td>
+  <td><input name="description[]" placeholder="Description"></td>
+  <td><input class="hsnCode" name="hsn_code[]" placeholder="HSN/SAC" readonly></td>
+  <td><input class="qty" name="qty[]" type="number" step="0.01" value="1"></td>
+  <td><input class="unit" name="unit[]" placeholder="UOM" readonly></td>
+  <td><input class="rate" name="rate[]" type="number" step="0.01" value="0"></td>
+  <td><input class="discount" name="discount[]" type="number" step="0.01" value="0"></td>
+  <td><input class="gstPercent" name="gst_percent[]" type="number" step="0.01" value="0"></td>
+  <td><input class="cgst" name="cgst[]" readonly></td>
+  <td><input class="sgst" name="sgst[]" readonly></td>
+  <td><input class="igst" name="igst[]" readonly></td>
+  <td><input class="lineTotal" name="line_total[]" readonly></td>
+  <td><button type="button" onclick="removeRow(this)">Remove</button></td>
 </tr>
 {% endfor %}
 </tbody>
-</table>
 
 <br>
 
