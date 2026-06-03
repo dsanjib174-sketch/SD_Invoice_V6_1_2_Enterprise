@@ -48,16 +48,22 @@ def visible_data(data):
 def get_financial_year():
     today = datetime.now()
     y = today.year
-    return f"{str(y)[-2:]}-{str(y+1)[-2:]}" if today.month >= 4 else f"{str(y-1)[-2:]}-{str(y)[-2:]}"
+    if today.month >= 4:
+        return f"{str(y)[-2:]}-{str(y + 1)[-2:]}"
+    return f"{str(y - 1)[-2:]}-{str(y)[-2:]}"
 
 
 def generate_doc_no(prefix, records):
-    return f"SD/{prefix}/{get_financial_year()}/{str(len(records)+1).zfill(3)}"
+    return f"SD/{prefix}/{get_financial_year()}/{str(len(records) + 1).zfill(3)}"
 
 
 def get_customers_from_roc():
     contracts = visible_data(load_json(ROC_FILE))
-    return sorted(set([c.get("customer_name") for c in contracts if c.get("customer_name") and c.get("status") == "Active"]))
+    return sorted(set([
+        c.get("customer_name")
+        for c in contracts
+        if c.get("customer_name") and c.get("status") == "Active"
+    ]))
 
 
 def auto_post_invoice(invoice):
@@ -156,6 +162,7 @@ def invoice():
             "po_date": request.form.get("po_date", ""),
             "place_of_supply": request.form.get("place_of_supply", ""),
             "payment_terms": request.form.get("payment_terms", ""),
+
             "customer_name": request.form.get("customer_name", ""),
             "customer_gst": request.form.get("customer_gst", ""),
             "customer_pan": request.form.get("customer_pan", ""),
@@ -163,15 +170,22 @@ def invoice():
             "customer_mobile": request.form.get("customer_mobile", ""),
             "customer_address": request.form.get("customer_address", ""),
             "shipping_address": request.form.get("shipping_address", ""),
+
             "items": items,
+
             "taxable_amount": request.form.get("taxable_amount", "0"),
             "cgst": request.form.get("cgst_total", "0"),
             "sgst": request.form.get("sgst_total", "0"),
             "igst": request.form.get("igst_total", "0"),
             "total_gst": request.form.get("total_gst", "0"),
+            "round_off": request.form.get("round_off", "0"),
             "grand_total": request.form.get("grand_total", "0"),
+
+            "terms": request.form.get("terms", ""),
+            "notes": request.form.get("notes", ""),
             "status": "Generated",
             "client_email": user_email,
+            "created_by": user_email,
             "created_at": datetime.now().strftime("%d-%m-%Y %I:%M %p")
         }
 
@@ -182,13 +196,19 @@ def invoice():
         flash("Invoice saved and posted to Ledger, GST and Tally/SAP.", "success")
         return redirect(url_for("documents.invoice_register"))
 
-    return render_template("documents/invoice.html", customers=customers, contracts=contracts, doc_no=generate_doc_no("INV", invoices))
+    return render_template(
+        "documents/invoice.html",
+        customers=customers,
+        contracts=contracts,
+        doc_no=generate_doc_no("INV", invoices)
+    )
 
 
 @documents_bp.route("/invoice-register")
 @login_required
 def invoice_register():
-    return render_template("documents/invoice_register.html", invoices=visible_data(load_json(INVOICE_FILE)))
+    invoices = visible_data(load_json(INVOICE_FILE))
+    return render_template("documents/invoice_register.html", invoices=invoices)
 
 
 @documents_bp.route("/invoice/preview/<invoice_id>")
@@ -234,4 +254,5 @@ def credit_note():
 @documents_bp.route("/document-register")
 @login_required
 def document_register():
-    return render_template("documents/register.html", invoices=visible_data(load_json(INVOICE_FILE)))
+    invoices = visible_data(load_json(INVOICE_FILE))
+    return render_template("documents/register.html", invoices=invoices)
