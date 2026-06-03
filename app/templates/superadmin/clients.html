@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+<h2>Client Management</h2>
+<form method="POST" class="grid">
+<input type="hidden" name="action" value="create">
+<input name="company" placeholder="Company" required>
+<input name="email" placeholder="Email" required>
+<input name="user_limit" placeholder="User Limit">
+<input name="branch_limit" placeholder="Branch Limit">
+<select name="plan_name" required><option value="">Select Plan</option>{% for p in plans %}<option value="{{ p.plan }}">{{ p.plan }} - ₹{{ p.price }}</option>{% endfor %}</select>
+<button type="submit">Create Client</button>
+</form>
+<br>
+<table border="1" cellpadding="8" cellspacing="0" width="100%">
+<tr><th>Company</th><th>Email</th><th>Plan</th><th>Active Date</th><th>Expire Date</th><th>Status</th><th>Edit Expiry</th></tr>
+{% if clients %}{% for c in clients %}<tr><td>{{ c.company }}</td><td>{{ c.email }}</td><td>{{ c.plan_name }}</td><td>{{ c.active_date }}</td><td>{{ c.expire_date }}</td><td>{{ c.status }}</td><td><form method="POST"><input type="hidden" name="action" value="edit_expiry"><input type="hidden" name="client_id" value="{{ c.id }}"><input type="date" name="new_expire_date" value="{{ c.expire_date }}" required><input type="text" name="comment" placeholder="Reason/comment required" required><button type="submit">Update</button></form>{% if c.expiry_edit_comment %}<small>Last Comment: {{ c.expiry_edit_comment }}</small>{% endif %}</td></tr>{% endfor %}{% else %}<tr><td colspan="7">No records.</td></tr>{% endif %}
+</table>
+</section>
+{% endblock %}

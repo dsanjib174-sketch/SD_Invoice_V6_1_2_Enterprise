@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+<title>{{ COMPANY_NAME }} Login</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body class="login-page">
+  <div class="login-shell">
+    <section class="login-left">
+      <div class="login-logo"><img src="/static/img/smart_data_final_logo.png" onerror="this.style.display='none'"><span>SMART DADA SOLUTION</span></div>
+      <form method="post" class="login-card">
+        <h2>{{ login_mode or 'Client Login' }}</h2>
+        <p>Welcome back. Please sign in to continue.</p>
+        <label>Login ID</label>
+        <input name="user_id" placeholder="Employee No / Email ID" required>
+        <label>Password</label>
+        <div class="password-box"><input id="password" name="password" placeholder="Password" type="password" required><button type="button" onclick="togglePassword()">👁</button></div>
+        <a class="forgot" href="/forgot-password">Forgot password?</a>
+        <button class="primary-btn" type="submit">Login</button>
+        <div class="switch-login">{% if admin %}<a href="/">Client Login</a>{% else %}<a href="/admin">Super Admin Login</a>{% endif %}</div>
+      </form>
+    </section>
+    <section class="login-right">
+      <div class="promo-card">
+        <span class="version-pill">{{ APP_VERSION }}</span>
+        <h1>Enterprise Invoice ERP SaaS</h1>
+        <p>Quotation to Invoice, GST Reports, Tally/SAP export, Branch Management, Credit Note and Client Updates in one platform.</p>
+        <div class="promo-grid"><b>Professional Dashboard</b><b>Secure Client Panel</b><b>Subscription Control</b><b>Updates Broadcast</b></div>
+      </div>
+    </section>
+  </div>
+<script>
+function togglePassword(){const p=document.getElementById('password');p.type=p.type==='password'?'text':'password'}
+</script>
+</body>
+</html>

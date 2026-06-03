@@ -1,0 +1,12 @@
+{% extends 'base.html' %}{% block content %}
+<h2>Latest Updates</h2>
+<p class="muted">New announcements and product updates from SMART DADA SOLUTION.</p>
+<div class="updates-grid">
+{% for u in updates %}
+  <article class="update-card">
+    {% if u.image_url %}<img src="{{ u.image_url }}">{% endif %}
+    <small>{{ u.created_at }}</small><h3>{{ u.title }}</h3><p>{{ u.message }}</p>
+  </article>
+{% else %}<p>No updates available.</p>{% endfor %}
+</div>
+{% endblock %}

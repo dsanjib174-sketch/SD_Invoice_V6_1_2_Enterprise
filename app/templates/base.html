@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+<title>{{ COMPANY_NAME }} | {{ APP_VERSION }}</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body class="app-body">
+<aside class="sidebar">
+  <div class="side-brand">
+    <img src="/static/img/smart_data_final_logo.png" onerror="this.style.display='none'">
+    <div><strong>SMART DADA</strong><span>SOLUTION</span></div>
+  </div>
+  <nav class="side-nav">
+    <a href="/dashboard">Dashboard</a>
+    {% if session.get('login_type') == 'superadmin' %}
+      <a href="/superadmin/clients">Clients</a>
+      <a href="/subscription">Subscription</a>
+      <a href="/superadmin/plans">Plans</a>
+      <a href="/superadmin/updates">Updates</a>
+      <a href="/client-data">Client Data</a>
+      <a href="/audit">Audit Logs</a>
+    {% else %}
+      <a href="/updates">Updates</a>
+      <a href="/subscription">Plan Expiry</a>
+    {% endif %}
+    <a href="/company-profile">Company/Profile</a>
+    <a href="/branches">Branches</a>
+    <a href="/users">Users</a>
+    <a href="/masters">Masters</a>
+    <a href="/rate-contract">Rate Contract</a>
+    <a href="/quotation">Quotation</a>
+    <a href="/proforma">Proforma Invoice</a>
+    <a href="/invoice">Invoice</a>
+    <a href="/invoice-register">Saved Invoices</a>
+    <a href="/delivery-challan">Delivery Challan</a>
+    <a href="/credit-note">Credit Note</a>
+    <a href="/document-register">Document Register</a>
+    <a href="/ledger">Ledger</a>
+    <a href="/gst-gsp">GST Reports</a>
+    <a href="/tally-sap">Tally/SAP Export</a>
+    <a href="/communication">Communication</a>
+    <a href="/change-password">Change Password</a>
+  </nav>
+</aside>
+<section class="content-wrap">
+  <header class="topbar">
+    <div><b>{{ APP_VERSION }}</b><small>{{ session.get('login_type','')|title }} Panel</small></div>
+    <div class="user-chip">{{ session.get('user','User') }} <a href="/logout">Logout</a></div>
+  </header>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-wrap">
+        {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  <main class="main-card">{% block content %}{% endblock %}</main>
+</section>
+</body>
+</html>

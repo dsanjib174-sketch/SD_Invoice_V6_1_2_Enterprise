@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block content %}
+{% set records = quotations %}
+
+<section>
+<h2>Quotation Entry</h2>
+<p><b>V6.1:</b> Auto number, ROC vendor/product dropdown, auto tax calculation.</p>
+
+<form method="POST" class="grid">
+<input type="hidden" name="action" value="save_quotation">
+
+<div class="doc-section-title">Document Details</div>
+<input name="quotation_no" value="{{ doc_no }}" readonly>
+<input name="document_date" type="date">
+<input name="due_date" type="date">
+<input name="po_number" placeholder="PO Number">
+<input name="po_date" type="date">
+<input name="place_of_supply" placeholder="Place of Supply">
+<select name="payment_terms"><option value="">Payment Terms</option><option>Immediate</option><option>7 Days</option><option>15 Days</option><option>30 Days</option></select>
+
+<div class="doc-section-title">Customer / Vendor Details</div>
+<select id="vendorSelect" name="vendor_name" required>
+  <option value="">Select Customer / Vendor</option>
+  {% for v in vendors %}<option value="{{ v }}">{{ v }}</option>{% endfor %}
+</select>
+<input id="customerName" name="customer_name" placeholder="Customer / Vendor Name">
+<input id="gstin" name="gstin" placeholder="GSTIN">
+<input id="pan" name="pan" placeholder="PAN">
+<input id="state" name="state" placeholder="State">
+<input id="state_code" name="state_code" placeholder="State Code">
+<input id="email" name="email" placeholder="Email">
+<input id="phone" name="phone" placeholder="Phone">
+<input id="contact_person" name="contact_person" placeholder="Contact Person">
+
+<div class="doc-section-title">Billing / Shipping Address</div>
+<textarea id="billing_address" name="billing_address" placeholder="Bill To Address"></textarea>
+<textarea id="shipping_address" name="shipping_address" placeholder="Ship To Address"></textarea>
+
+<div class="doc-section-title">Item Details with GST</div>
+<table class="line-table">
+<tr><th>#</th><th>Item / Service</th><th>Description</th><th>HSN/SAC</th><th>Qty</th><th>UOM</th><th>Rate</th><th>Discount</th><th>GST %</th><th>CGST</th><th>SGST</th><th>IGST</th><th>Total</th></tr>
+<tr>
+<td>1</td>
+<td><select id="productSelect" name="product_name" required><option value="">Select Product / Service</option></select></td>
+<td><input name="description" placeholder="Description"></td>
+<td><input id="hsnCode" name="hsn_code" placeholder="HSN/SAC"></td>
+<td><input id="qty" name="qty" type="number" step="0.01" value="1"></td>
+<td><input id="unit" name="unit" placeholder="UOM"></td>
+<td><input id="rate" name="rate" type="number" step="0.01" value="0"></td>
+<td><input id="discount" name="discount" type="number" step="0.01" value="0"></td>
+<td><input id="gstPercent" name="gst_percent" type="number" step="0.01" value="0"></td>
+<td><input id="cgst" name="cgst" readonly></td>
+<td><input id="sgst" name="sgst" readonly></td>
+<td><input id="igst" name="igst" readonly></td>
+<td><input id="lineTotal" name="line_total" readonly></td>
+</tr>
+</table>
+
+<div class="doc-section-title">Tax Summary</div>
+<input id="taxableAmount" name="taxable_amount" placeholder="Taxable Amount" readonly>
+<input id="cgstTotal" name="cgst_total" placeholder="CGST Total" readonly>
+<input id="sgstTotal" name="sgst_total" placeholder="SGST Total" readonly>
+<input id="igstTotal" name="igst_total" placeholder="IGST Total" readonly>
+<input id="totalGst" name="total_gst" placeholder="Total GST" readonly>
+<input id="roundOff" name="round_off" placeholder="Round Off" value="0">
+<input id="grandTotal" name="grand_total" placeholder="Grand Total" readonly>
+<input id="amountWords" name="amount_words" placeholder="Amount in Words">
+
+<div class="doc-section-title">Terms & Notes</div>
+<textarea name="terms" placeholder="Terms & Conditions"></textarea>
+<textarea name="remarks" placeholder="Remarks / Notes"></textarea>
+
+<div class="action-row">
+<button type="submit">Save</button>
+<a class="button-link" href="/invoice/preview">Preview</a>
+<button type="button" onclick="window.print()">Print / PDF</button>
+</div>
+</form>
+
+{% if false %}
+<h3>Saved Quotations</h3>
+<table border="1" cellpadding="8" cellspacing="0" width="100%">
+<tr><th>No</th><th>Vendor</th><th>Product</th><th>Rate</th><th>GST</th><th>Total</th><th>Status</th><th>Date</th></tr>
+{% for r in records %}
+<tr><td>{{ r.get(no_name, '') }}</td><td>{{ r.vendor_name }}</td><td>{{ r.product_name }}</td><td>{{ r.rate }}</td><td>{{ r.gst_percent }}</td><td>{{ r.grand_total }}</td><td>{{ r.status }}</td><td>{{ r.created_at }}</td></tr>
+{% endfor %}
+</table>
+{% endif %}
+
+<h3>Saved Quotations</h3>
+<table border="1" cellpadding="8" cellspacing="0" width="100%">
+<tr><th>Quotation No</th><th>Vendor</th><th>Product</th><th>HSN</th><th>Rate</th><th>GST</th><th>Status</th><th>Action</th></tr>
+{% if quotations %}
+{% for q in quotations %}
+<tr>
+<form method="POST">
+<input type="hidden" name="quotation_id" value="{{ q.id }}">
+<td><input name="quotation_no" value="{{ q.quotation_no }}" {% if q.status == 'Approved' %}readonly{% endif %}></td>
+<td><input name="vendor_name" value="{{ q.vendor_name }}" {% if q.status == 'Approved' %}readonly{% endif %}></td>
+<td><input name="product_name" value="{{ q.product_name }}" {% if q.status == 'Approved' %}readonly{% endif %}></td>
+<td><input name="hsn_code" value="{{ q.hsn_code }}" {% if q.status == 'Approved' %}readonly{% endif %}></td>
+<td><input name="rate" value="{{ q.rate }}" {% if q.status == 'Approved' %}readonly{% endif %}></td>
+<td><input name="gst_percent" value="{{ q.gst_percent }}" {% if q.status == 'Approved' %}readonly{% endif %}></td>
+<td>{{ q.status }}</td>
+<td>{% if q.status != 'Approved' %}<button name="action" value="update_quotation">Edit / Update</button><button name="action" value="approve_quotation">Approve</button>{% else %}Added to ROC{% endif %}</td>
+</form>
+</tr>
+{% endfor %}
+{% else %}<tr><td colspan="8">No quotations found.</td></tr>{% endif %}
+</table>
+</section>
+
+<script>
+const contracts = {{ contracts|tojson|safe }};
+const vendorRecords = {{ vendor_records|default([])|tojson|safe }};
+const vendorSelect = document.getElementById("vendorSelect");
+const productSelect = document.getElementById("productSelect");
+
+vendorSelect.addEventListener("change", function () {
+  const vendorName = this.value;
+  const vendor = vendorRecords.find(v => v.vendor_name === vendorName);
+  document.getElementById("customerName").value = vendorName;
+  if (vendor) {
+    document.getElementById("gstin").value = vendor.vendor_gst || "";
+    document.getElementById("pan").value = vendor.vendor_pan || "";
+    document.getElementById("state").value = vendor.vendor_state || "";
+    document.getElementById("state_code").value = vendor.vendor_state_code || "";
+    document.getElementById("email").value = vendor.vendor_email || "";
+    document.getElementById("phone").value = vendor.vendor_mobile || "";
+    document.getElementById("billing_address").value = vendor.vendor_address || "";
+    document.getElementById("shipping_address").value = vendor.vendor_address || "";
+  }
+  productSelect.innerHTML = '<option value="">Select Product / Service</option>';
+  contracts.filter(c => c.vendor_name === vendorName && (c.status || "Active") === "Active").forEach(c => {
+    const option = document.createElement("option");
+    option.value = c.product_name || "";
+    option.textContent = c.product_name || "";
+    option.dataset.hsn = c.hsn_code || "";
+    option.dataset.unit = c.unit || "";
+    option.dataset.rate = c.rate || "0";
+    option.dataset.gst = c.gst_percent || "0";
+    productSelect.appendChild(option);
+  });
+});
+
+productSelect.addEventListener("change", function () {
+  const selected = this.options[this.selectedIndex];
+  document.getElementById("hsnCode").value = selected.dataset.hsn || "";
+  document.getElementById("unit").value = selected.dataset.unit || "";
+  document.getElementById("rate").value = selected.dataset.rate || "0";
+  document.getElementById("gstPercent").value = selected.dataset.gst || "0";
+  calculateTax();
+});
+
+["qty", "rate", "discount", "gstPercent", "roundOff"].forEach(id => document.getElementById(id).addEventListener("input", calculateTax));
+function calculateTax() {
+  const qty = parseFloat(document.getElementById("qty").value) || 0;
+  const rate = parseFloat(document.getElementById("rate").value) || 0;
+  const discount = parseFloat(document.getElementById("discount").value) || 0;
+  const gst = parseFloat(document.getElementById("gstPercent").value) || 0;
+  const roundOff = parseFloat(document.getElementById("roundOff").value) || 0;
+  const taxable = Math.max((qty * rate) - discount, 0);
+  const totalGst = taxable * gst / 100;
+  const cgst = totalGst / 2;
+  const sgst = totalGst / 2;
+  const igst = 0;
+  const grandTotal = taxable + totalGst + roundOff;
+  document.getElementById("taxableAmount").value = taxable.toFixed(2);
+  document.getElementById("cgst").value = cgst.toFixed(2);
+  document.getElementById("sgst").value = sgst.toFixed(2);
+  document.getElementById("igst").value = igst.toFixed(2);
+  document.getElementById("cgstTotal").value = cgst.toFixed(2);
+  document.getElementById("sgstTotal").value = sgst.toFixed(2);
+  document.getElementById("igstTotal").value = igst.toFixed(2);
+  document.getElementById("totalGst").value = totalGst.toFixed(2);
+  document.getElementById("lineTotal").value = grandTotal.toFixed(2);
+  document.getElementById("grandTotal").value = grandTotal.toFixed(2);
+}
+</script>
+{% endblock %}

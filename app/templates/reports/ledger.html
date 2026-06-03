@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+<h2>Ledger</h2>
+<table border="1" cellpadding="8" cellspacing="0" width="100%">
+<tr><th>Type</th><th>Document No</th><th>Customer</th><th>Debit</th><th>Credit</th><th>Status</th><th>Date</th></tr>
+{% if entries %}{% for e in entries %}<tr><td>{{ e.type }}</td><td>{{ e.document_no }}</td><td>{{ e.customer_name }}</td><td>{{ e.debit }}</td><td>{{ e.credit }}</td><td>{{ e.status }}</td><td>{{ e.created_at }}</td></tr>{% endfor %}{% else %}<tr><td colspan="7">No records.</td></tr>{% endif %}
+</table>
+</section>
+{% endblock %}

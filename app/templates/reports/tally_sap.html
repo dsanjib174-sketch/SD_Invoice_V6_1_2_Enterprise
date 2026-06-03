@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+<h2>Tally/SAP Export</h2>
+<a class="button-link" href="/tally-sap/export">Export Tally/SAP CSV</a>
+<br><br>
+<table border="1" cellpadding="8" cellspacing="0" width="100%">
+<tr><th>Voucher</th><th>Invoice</th><th>Party</th><th>Amount</th><th>Taxable</th><th>GST</th><th>Date</th></tr>
+{% if entries %}{% for e in entries %}<tr><td>{{ e.voucher_type }}</td><td>{{ e.invoice_no }}</td><td>{{ e.party_name }}</td><td>{{ e.amount }}</td><td>{{ e.taxable_amount }}</td><td>{{ e.gst_amount }}</td><td>{{ e.created_at }}</td></tr>{% endfor %}{% else %}<tr><td colspan="7">No records.</td></tr>{% endif %}
+</table>
+</section>
+{% endblock %}

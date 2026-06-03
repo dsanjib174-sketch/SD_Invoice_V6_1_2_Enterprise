@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+<h2>User Management</h2>
+<form method="POST" class="grid">
+<input type="hidden" name="action" value="add">
+<input name="name" placeholder="Name" required>
+<input name="email" placeholder="Email" required>
+<input name="user_id" placeholder="User ID" required>
+<input name="password" type="password" placeholder="Set Password" required>
+<select name="branch" required><option value="">Select Branch</option>{% for b in branches %}<option value="{{ b.branch_name }}">{{ b.branch_name }}</option>{% endfor %}</select>
+{% if session.get('login_type') == 'superadmin' %}<input name="client_email" placeholder="Client Email"><select name="role"><option value="client">Client User</option><option value="superadmin">Super Admin</option></select>{% else %}<input type="hidden" name="role" value="client">{% endif %}
+<select name="status"><option value="Active">Active</option><option value="Inactive">Inactive</option></select>
+<button type="submit">Add User</button>
+</form>
+<br>
+<table border="1" cellpadding="8" cellspacing="0" width="100%">
+<tr><th>Name</th><th>Email</th><th>User ID</th><th>Branch</th><th>Role</th><th>Status</th><th>New Password</th><th>Action</th></tr>
+{% if users %}{% for u in users %}<tr><form method="POST"><input type="hidden" name="action" value="update"><input type="hidden" name="user_record_id" value="{{ u.id }}"><td><input name="name" value="{{ u.name }}" required></td><td><input name="email" value="{{ u.email }}" required></td><td><input name="user_id" value="{{ u.user_id }}" required></td><td><select name="branch">{% for b in branches %}<option value="{{ b.branch_name }}" {% if u.branch == b.branch_name %}selected{% endif %}>{{ b.branch_name }}</option>{% endfor %}</select></td><td>{% if session.get('login_type') == 'superadmin' %}<select name="role"><option value="client" {% if u.role == 'client' %}selected{% endif %}>Client User</option><option value="superadmin" {% if u.role == 'superadmin' %}selected{% endif %}>Super Admin</option></select><input name="client_email" value="{{ u.client_email }}" placeholder="Client Email">{% else %}{{ u.role }}{% endif %}</td><td><select name="status"><option value="Active" {% if u.status == 'Active' %}selected{% endif %}>Active</option><option value="Inactive" {% if u.status == 'Inactive' %}selected{% endif %}>Inactive</option></select></td><td><input name="password" type="password" placeholder="New Password"></td><td><button type="submit">Update</button></td></form></tr>{% endfor %}{% else %}<tr><td colspan="8">No users found.</td></tr>{% endif %}
+</table>
+</section>
+{% endblock %}

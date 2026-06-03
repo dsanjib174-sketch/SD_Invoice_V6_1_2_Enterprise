@@ -1,0 +1,21 @@
+{% extends 'base.html' %}{% block content %}
+<h2>Updates Broadcast</h2>
+<p class="muted">Upload text and image updates from Super Admin. Published updates are visible in the Client Panel.</p>
+<form method="post" enctype="multipart/form-data" class="form-card">
+  <label>Update Title</label><input name="title" placeholder="Example: New GST Report Feature" required>
+  <label>Message / Description</label><textarea name="message" rows="5" placeholder="Write update details for clients" required></textarea>
+  <label>Status</label><select name="status"><option>Published</option><option>Draft</option></select>
+  <label>Image Upload</label><input type="file" name="image" accept="image/*">
+  <button class="primary-btn" type="submit">Publish Update</button>
+</form>
+<h3>Recent Updates</h3>
+<div class="updates-grid">
+{% for u in updates %}
+  <article class="update-card">
+    {% if u.image_url %}<img src="{{ u.image_url }}">{% endif %}
+    <div><span class="badge">{{ u.status }}</span><small>{{ u.created_at }}</small></div>
+    <h3>{{ u.title }}</h3><p>{{ u.message }}</p>
+  </article>
+{% else %}<p>No updates published yet.</p>{% endfor %}
+</div>
+{% endblock %}

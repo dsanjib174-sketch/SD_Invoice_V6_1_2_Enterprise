@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+<title>Professional Invoice</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.invoice{max-width:1120px;margin:20px auto;background:white;color:#111}
+.invoice table{width:100%;border-collapse:collapse}
+.invoice td,.invoice th{border:1px solid #555;padding:6px;font-size:13px;vertical-align:top}
+.invoice h2{text-align:center;border:1px solid #555;margin:0;padding:6px}
+.invoice-logo{max-width:100px;float:left;margin-right:10px}
+.right{text-align:right}.bold{font-weight:bold}
+@media print{header,nav,.no-print{display:none}.invoice{margin:0;max-width:none}}
+</style>
+</head>
+<body>
+<div class="invoice">
+<h2>Tax Invoice</h2>
+<table>
+<tr>
+<td colspan="4"><img class="invoice-logo" src="/static/img/smart_data_final_logo.png"><b>SMART DATA SOLUTION</b><br>Address: Ahmedabad, Gujarat<br>GSTIN: 24XXXXXXXXXXXX<br>PAN: XXXXX1234X<br>State: 24-Gujarat</td>
+<td colspan="2"><b>Invoice No.</b><br>INV/2026-001<br><br><b>Place of Supply</b><br>24-Gujarat</td>
+<td colspan="2"><b>Date</b><br>DD-MM-YYYY<br><br><b>PO Date</b><br>DD-MM-YYYY</td>
+</tr>
+<tr><td colspan="4"><b>Bill To</b><br>Customer Name<br>Billing Address<br>GSTIN:</td><td colspan="4"><b>Ship To</b><br>Customer Name<br>Shipping Address</td></tr>
+<tr><th>#</th><th>Item Name</th><th>HSN/SAC</th><th>Qty</th><th>Unit</th><th>Rate</th><th>GST</th><th>Amount</th></tr>
+<tr><td>1</td><td>Sample Item</td><td>9999</td><td class="right">1</td><td>Nos</td><td class="right">₹0.00</td><td class="right">18%</td><td class="right">₹0.00</td></tr>
+<tr class="bold"><td colspan="3">Total</td><td class="right">1</td><td></td><td></td><td class="right">₹0.00</td><td class="right">₹0.00</td></tr>
+</table>
+<table><tr><td colspan="4"><b>Amount in Words</b><br>Zero Rupees Only</td><td colspan="4"><b>Amount Summary</b><br>Taxable: ₹0.00<br>CGST: ₹0.00<br>SGST: ₹0.00<br>IGST: ₹0.00<br><b>Total: ₹0.00</b></td></tr></table>
+<table><tr><th>HSN/SAC</th><th>Taxable</th><th>CGST Rate</th><th>CGST Amt</th><th>SGST Rate</th><th>SGST Amt</th><th>IGST Rate</th><th>IGST Amt</th></tr><tr><td>9999</td><td>₹0.00</td><td>9%</td><td>₹0.00</td><td>9%</td><td>₹0.00</td><td>0%</td><td>₹0.00</td></tr></table>
+<table><tr><td><b>Bank Details</b><br>Bank:<br>Account:<br>IFSC:<br>UPI:</td><td><b>Terms & Conditions</b><br>Payment due on or before due date.<br>Subject to local jurisdiction.</td><td style="text-align:center"><b>For SMART DATA SOLUTION</b><br><br><br>Authorized Signatory</td></tr></table>
+<div class="no-print" style="text-align:right;margin-top:12px"><button onclick="window.print()">Print / Save PDF</button></div>
+</div>
+</body>
+</html>

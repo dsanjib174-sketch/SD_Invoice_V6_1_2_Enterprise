@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: sd-invoice-v56-full-erp-menu
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn run:app

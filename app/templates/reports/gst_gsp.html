@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+<h2>GST/GSP Reports</h2>
+<a class="button-link" href="/gst-gsp/export">Export GSTR-1 CSV</a>
+<br><br>
+<table border="1" cellpadding="8" cellspacing="0" width="100%">
+<tr><th>Invoice</th><th>Customer</th><th>GSTIN</th><th>Taxable</th><th>CGST</th><th>SGST</th><th>IGST</th><th>Total GST</th><th>Grand Total</th></tr>
+{% if entries %}{% for e in entries %}<tr><td>{{ e.document_no }}</td><td>{{ e.customer_name }}</td><td>{{ e.gstin }}</td><td>{{ e.taxable_amount }}</td><td>{{ e.cgst }}</td><td>{{ e.sgst }}</td><td>{{ e.igst }}</td><td>{{ e.total_gst }}</td><td>{{ e.grand_total }}</td></tr>{% endfor %}{% else %}<tr><td colspan="9">No records.</td></tr>{% endif %}
+</table>
+</section>
+{% endblock %}

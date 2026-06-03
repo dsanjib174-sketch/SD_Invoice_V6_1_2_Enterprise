@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+<h2>Document Register</h2>
+<table border="1" cellpadding="8" cellspacing="0" width="100%">
+<tr><th>No</th><th>Type</th><th>Customer</th><th>Total</th><th>Status</th><th>Created At</th></tr>
+{% if docs %}{% for d in docs %}<tr><td>{{ d.no }}</td><td>{{ d.type }}</td><td>{{ d.customer_name }}</td><td>{{ d.total }}</td><td>{{ d.status }}</td><td>{{ d.created_at }}</td></tr>{% endfor %}{% else %}<tr><td colspan="6">No records.</td></tr>{% endif %}
+</table>
+</section>
+{% endblock %}
