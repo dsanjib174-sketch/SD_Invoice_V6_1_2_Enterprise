@@ -15,6 +15,7 @@ def load_json(filename):
     path = _json_path(filename)
     if not os.path.exists(path):
         return []
+
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -30,12 +31,17 @@ def is_superadmin():
 def visible_data(data):
     if is_superadmin():
         return data
-    return [d for d in data if d.get("client_email") == current_user_email()]
+
+    return [
+        d for d in data
+        if d.get("client_email") == current_user_email()
+    ]
 
 
+@reports_bp.route("/gst")
 @reports_bp.route("/gst-gsp")
 @login_required
-def gst_gsp():
+def gst():
     records = visible_data(load_json(GST_FILE))
     return render_template("reports/gst.html", records=records)
 
