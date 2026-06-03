@@ -4,11 +4,11 @@
 <section>
 <h2>Tax Invoice Preview</h2>
 
-<p><b>Invoice No:</b> {{ invoice.invoice_no }}</p>
-<p><b>Customer:</b> {{ invoice.customer_name }}</p>
-<p><b>GST:</b> {{ invoice.customer_gst }}</p>
-<p><b>PAN:</b> {{ invoice.customer_pan }}</p>
-<p><b>Address:</b> {{ invoice.customer_address }}</p>
+<p><b>Invoice No:</b> {{ invoice.get("invoice_no", "") }}</p>
+<p><b>Customer:</b> {{ invoice.get("customer_name", "") }}</p>
+<p><b>GST:</b> {{ invoice.get("customer_gst", "") }}</p>
+<p><b>PAN:</b> {{ invoice.get("customer_pan", "") }}</p>
+<p><b>Address:</b> {{ invoice.get("customer_address", "") }}</p>
 
 <table border="1" cellpadding="8" cellspacing="0" width="100%">
 <tr>
@@ -23,18 +23,20 @@
 <th>Total</th>
 </tr>
 
-{% if invoice.items %}
-  {% for item in invoice.items %}
+{% set invoice_items = invoice.get("items", []) %}
+
+{% if invoice_items %}
+  {% for item in invoice_items %}
   <tr>
     <td>{{ loop.index }}</td>
-    <td>{{ item.product_name }}</td>
-    <td>{{ item.description }}</td>
-    <td>{{ item.hsn_code }}</td>
-    <td>{{ item.qty }}</td>
-    <td>{{ item.unit }}</td>
-    <td>{{ item.rate }}</td>
-    <td>{{ item.gst_percent }}</td>
-    <td>{{ item.line_total }}</td>
+    <td>{{ item.get("product_name", "") }}</td>
+    <td>{{ item.get("description", "") }}</td>
+    <td>{{ item.get("hsn_code", "") }}</td>
+    <td>{{ item.get("qty", "") }}</td>
+    <td>{{ item.get("unit", "") }}</td>
+    <td>{{ item.get("rate", "") }}</td>
+    <td>{{ item.get("gst_percent", "") }}</td>
+    <td>{{ item.get("line_total", "") }}</td>
   </tr>
   {% endfor %}
 {% else %}
@@ -45,12 +47,12 @@
 </table>
 
 <h3>Tax Summary</h3>
-<p>Taxable Amount: {{ invoice.taxable_amount }}</p>
-<p>CGST: {{ invoice.cgst }}</p>
-<p>SGST: {{ invoice.sgst }}</p>
-<p>IGST: {{ invoice.igst }}</p>
-<p>Total GST: {{ invoice.total_gst }}</p>
-<p><b>Grand Total: {{ invoice.grand_total }}</b></p>
+<p>Taxable Amount: {{ invoice.get("taxable_amount", "0") }}</p>
+<p>CGST: {{ invoice.get("cgst", "0") }}</p>
+<p>SGST: {{ invoice.get("sgst", "0") }}</p>
+<p>IGST: {{ invoice.get("igst", "0") }}</p>
+<p>Total GST: {{ invoice.get("total_gst", "0") }}</p>
+<p><b>Grand Total: {{ invoice.get("grand_total", "0") }}</b></p>
 
 <button onclick="window.print()">Print / PDF</button>
 
