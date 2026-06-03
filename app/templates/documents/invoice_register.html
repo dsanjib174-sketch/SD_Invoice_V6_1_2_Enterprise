@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
+
 <section>
 <h2>Saved Invoice Register</h2>
 
@@ -23,6 +24,15 @@
 <td>{{ i.status }}</td>
 <td>
 <a href="/invoice/preview/{{ i.id }}">Preview / Print</a>
+
+{% if i.status != "Cancelled" %}
+<form method="POST" action="/invoice/cancel/{{ i.id }}" style="display:inline;">
+<input name="cancel_reason" placeholder="Reason" required>
+<button type="submit">Cancel & Create Credit Note</button>
+</form>
+{% else %}
+Credit Note Created
+{% endif %}
 </td>
 </tr>
 {% endfor %}
@@ -31,4 +41,5 @@
 {% endif %}
 </table>
 </section>
+
 {% endblock %}
