@@ -11,6 +11,7 @@ LEDGER_FILE = "ledger.json"
 GST_FILE = "gst_reports.json"
 TALLY_FILE = "tally_exports.json"
 CREDIT_NOTE_FILE = "credit_notes.json"
+RECEIPT_FILE = "receipts.json"
 
 
 def _json_path(filename):
@@ -118,6 +119,58 @@ def post_invoice(invoice):
     save_json(TALLY_FILE, tally)
 
 
+def reverse_invoice(inv, credit_note):
+    ledger = load_json(LEDGER_FILE)
+    gst = load_json(GST_FILE)
+    tally = load_json(TALLY_FILE)
+
+    ledger.insert(0, {
+        "id": uuid.uuid4().hex,
+        "invoice_id": inv.get("id"),
+        "invoice_no": credit_note["credit_note_no"],
+        "customer_name": inv.get("customer_name"),
+        "debit": "0",
+        "credit": inv.get("grand_total"),
+        "amount": inv.get("grand_total"),
+        "type": "Credit Note",
+        "status": "Created",
+        "client_email": inv.get("client_email"),
+        "created_at": credit_note["created_at"]
+    })
+
+    gst.insert(0, {
+        "id": uuid.uuid4().hex,
+        "invoice_id": inv.get("id"),
+        "invoice_no": credit_note["credit_note_no"],
+        "customer_name": inv.get("customer_name"),
+        "taxable_amount": "-" + str(inv.get("taxable_amount", "0")),
+        "cgst": "-" + str(inv.get("cgst", "0")),
+        "sgst": "-" + str(inv.get("sgst", "0")),
+        "igst": "-" + str(inv.get("igst", "0")),
+        "total_gst": "-" + str(inv.get("total_gst", "0")),
+        "grand_total": "-" + str(inv.get("grand_total", "0")),
+        "status": "Credit Note",
+        "client_email": inv.get("client_email"),
+        "created_at": credit_note["created_at"]
+    })
+
+    tally.insert(0, {
+        "id": uuid.uuid4().hex,
+        "invoice_id": inv.get("id"),
+        "voucher_no": credit_note["credit_note_no"],
+        "voucher_type": "Credit Note",
+        "customer_name": inv.get("customer_name"),
+        "amount": "-" + str(inv.get("grand_total", "0")),
+        "status": "Created",
+        "client_email": inv.get("client_email"),
+        "created_at": credit_note["created_at"]
+    })
+
+    save_json(LEDGER_FILE, ledger)
+    save_json(GST_FILE, gst)
+    save_json(TALLY_FILE, tally)
+
+
 @documents_bp.route("/invoice", methods=["GET", "POST"])
 @login_required
 def invoice():
@@ -143,6 +196,7 @@ def invoice():
         totals = request.form.getlist("line_total[]")
 
         items = []
+
         for i in range(len(product_names)):
             if product_names[i].strip():
                 items.append({
@@ -173,6 +227,7 @@ def invoice():
             "po_date": request.form.get("po_date", ""),
             "place_of_supply": request.form.get("place_of_supply", ""),
             "payment_terms": request.form.get("payment_terms", ""),
+
             "customer_name": request.form.get("customer_name", ""),
             "customer_gst": request.form.get("customer_gst", ""),
             "customer_pan": request.form.get("customer_pan", ""),
@@ -180,7 +235,9 @@ def invoice():
             "customer_mobile": request.form.get("customer_mobile", ""),
             "customer_address": request.form.get("customer_address", ""),
             "shipping_address": request.form.get("shipping_address", ""),
+
             "items": items,
+
             "taxable_amount": request.form.get("taxable_amount", "0"),
             "cgst": request.form.get("cgst_total", "0"),
             "sgst": request.form.get("sgst_total", "0"),
@@ -188,8 +245,10 @@ def invoice():
             "total_gst": request.form.get("total_gst", "0"),
             "round_off": request.form.get("round_off", "0"),
             "grand_total": request.form.get("grand_total", "0"),
+
             "terms": request.form.get("terms", ""),
             "notes": request.form.get("notes", ""),
+
             "status": "Generated",
             "client_email": user_email,
             "created_by": user_email,
@@ -198,11 +257,7 @@ def invoice():
 
         invoices.insert(0, invoice_data)
         save_json(INVOICE_FILE, invoices)
-        print("INVOICE SAVED:", invoice_data["invoice_no"])
-
-post_invoice(invoice_data)
-
-print("LEDGER POSTED:", invoice_data["invoice_no"])
+        post_invoice(invoice_data)
 
         flash("Invoice saved and posted to Ledger, GST and Tally/SAP.", "success")
         return redirect(url_for("documents.invoice_register"))
@@ -218,16 +273,22 @@ print("LEDGER POSTED:", invoice_data["invoice_no"])
 @documents_bp.route("/invoice-register")
 @login_required
 def invoice_register():
-    return render_template("documents/invoice_register.html", invoices=visible_data(load_json(INVOICE_FILE)))
+    invoices = visible_data(load_json(INVOICE_FILE))
+    return render_template("documents/invoice_register.html", invoices=invoices)
 
 
 @documents_bp.route("/invoice/preview/<invoice_id>")
 @login_required
 def invoice_preview(invoice_id):
-    invoice = next((i for i in visible_data(load_json(INVOICE_FILE)) if i.get("id") == invoice_id), None)
-    if not invoice:
+    invoice_data = next(
+        (i for i in visible_data(load_json(INVOICE_FILE)) if i.get("id") == invoice_id),
+        None
+    )
+
+    if not invoice_data:
         return "Invoice not found", 404
-    return render_template("documents/invoice_preview.html", invoice=invoice)
+
+    return render_template("documents/invoice_preview.html", invoice=invoice_data)
 
 
 @documents_bp.route("/invoice/cancel/<invoice_id>", methods=["POST"])
@@ -235,10 +296,6 @@ def invoice_preview(invoice_id):
 def cancel_invoice(invoice_id):
     invoices = load_json(INVOICE_FILE)
     credit_notes = load_json(CREDIT_NOTE_FILE)
-    ledger = load_json(LEDGER_FILE)
-    gst = load_json(GST_FILE)
-    tally = load_json(TALLY_FILE)
-
     user_email = current_user_email()
 
     for inv in invoices:
@@ -272,61 +329,71 @@ def cancel_invoice(invoice_id):
             }
 
             credit_notes.insert(0, credit_note)
-
-            ledger.insert(0, {
-                "id": uuid.uuid4().hex,
-                "invoice_id": inv.get("id"),
-                "invoice_no": credit_note["credit_note_no"],
-                "customer_name": inv.get("customer_name"),
-                "debit": "0",
-                "credit": inv.get("grand_total"),
-                "amount": inv.get("grand_total"),
-                "type": "Credit Note",
-                "status": "Created",
-                "client_email": inv.get("client_email"),
-                "created_at": credit_note["created_at"]
-            })
-
-            gst.insert(0, {
-                "id": uuid.uuid4().hex,
-                "invoice_id": inv.get("id"),
-                "invoice_no": credit_note["credit_note_no"],
-                "customer_name": inv.get("customer_name"),
-                "taxable_amount": "-" + str(inv.get("taxable_amount", "0")),
-                "cgst": "-" + str(inv.get("cgst", "0")),
-                "sgst": "-" + str(inv.get("sgst", "0")),
-                "igst": "-" + str(inv.get("igst", "0")),
-                "total_gst": "-" + str(inv.get("total_gst", "0")),
-                "grand_total": "-" + str(inv.get("grand_total", "0")),
-                "status": "Credit Note",
-                "client_email": inv.get("client_email"),
-                "created_at": credit_note["created_at"]
-            })
-
-            tally.insert(0, {
-                "id": uuid.uuid4().hex,
-                "invoice_id": inv.get("id"),
-                "voucher_no": credit_note["credit_note_no"],
-                "voucher_type": "Credit Note",
-                "customer_name": inv.get("customer_name"),
-                "amount": "-" + str(inv.get("grand_total", "0")),
-                "status": "Created",
-                "client_email": inv.get("client_email"),
-                "created_at": credit_note["created_at"]
-            })
-
+            reverse_invoice(inv, credit_note)
             break
 
     save_json(INVOICE_FILE, invoices)
     save_json(CREDIT_NOTE_FILE, credit_notes)
-    save_json(LEDGER_FILE, ledger)
-    save_json(GST_FILE, gst)
-    save_json(TALLY_FILE, tally)
 
     flash("Invoice cancelled, credit note created and reverse entries posted.", "success")
     return redirect(url_for("documents.invoice_register"))
 
+
+@documents_bp.route("/credit-note")
+@login_required
+def credit_note():
+    notes = visible_data(load_json(CREDIT_NOTE_FILE))
+    return render_template("documents/credit_note.html", notes=notes)
+
+
+@documents_bp.route("/receipts", methods=["GET", "POST"])
+@login_required
+def receipts():
+    receipts_data = load_json(RECEIPT_FILE)
+    invoices = visible_data(load_json(INVOICE_FILE))
+    user_email = current_user_email()
+
+    if request.method == "POST":
+        invoice_id = request.form.get("invoice_id")
+        invoice_data = next((i for i in invoices if i.get("id") == invoice_id), None)
+
+        if invoice_data:
+            receipts_data.insert(0, {
+                "id": uuid.uuid4().hex,
+                "receipt_no": generate_doc_no("RCPT", receipts_data),
+                "invoice_id": invoice_data.get("id"),
+                "invoice_no": invoice_data.get("invoice_no"),
+                "customer_name": invoice_data.get("customer_name"),
+                "amount_received": request.form.get("amount_received", "0"),
+                "payment_mode": request.form.get("payment_mode", ""),
+                "payment_date": request.form.get("payment_date", ""),
+                "remarks": request.form.get("remarks", ""),
+                "client_email": user_email,
+                "created_at": datetime.now().strftime("%d-%m-%Y %I:%M %p")
+            })
+
+            save_json(RECEIPT_FILE, receipts_data)
+            flash("Receipt saved successfully.", "success")
+
+        return redirect(url_for("documents.receipts"))
+
+    return render_template(
+        "documents/payment_receipts.html",
+        receipts=visible_data(receipts_data),
+        invoices=invoices
+    )
+
+
 @documents_bp.route("/document-register")
 @login_required
 def document_register():
-    return render_template("documents/register.html", invoices=visible_data(load_json(INVOICE_FILE)))
+    invoices = visible_data(load_json(INVOICE_FILE))
+    credit_notes = visible_data(load_json(CREDIT_NOTE_FILE))
+    receipts_data = visible_data(load_json(RECEIPT_FILE))
+
+    return render_template(
+        "documents/register.html",
+        invoices=invoices,
+        credit_notes=credit_notes,
+        receipts=receipts_data
+    )
