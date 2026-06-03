@@ -198,7 +198,11 @@ def invoice():
 
         invoices.insert(0, invoice_data)
         save_json(INVOICE_FILE, invoices)
-        post_invoice(invoice_data)
+        print("INVOICE SAVED:", invoice_data["invoice_no"])
+
+post_invoice(invoice_data)
+
+print("LEDGER POSTED:", invoice_data["invoice_no"])
 
         flash("Invoice saved and posted to Ledger, GST and Tally/SAP.", "success")
         return redirect(url_for("documents.invoice_register"))
