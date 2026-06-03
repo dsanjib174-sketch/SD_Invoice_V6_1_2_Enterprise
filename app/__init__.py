@@ -1,49 +1,39 @@
-from flask import Flask, jsonify
+from flask import Flask
 import os
-
-VERSION = "V6.1.2 Enterprise"
 
 
 def create_app():
     app = Flask(__name__)
-    import os
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "data")
+    # Secret key for session/login
+    app.secret_key = os.environ.get("SECRET_KEY", "sd-invoice-v6-secret-key")
 
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    app.secret_key = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
-    app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static", "uploads")
-    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
-    os.makedirs(os.path.join(app.config["UPLOAD_FOLDER"], "updates"), exist_ok=True)
+    # Permanent JSON data storage folder
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, "data")
 
-    @app.context_processor
-    def inject_globals():
-        return {"APP_VERSION": VERSION, "COMPANY_NAME": "SMART DADA SOLUTION"}
+    app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-    @app.route("/health")
-    def health():
-        return jsonify({"status": "ok", "version": VERSION})
-
-    @app.route("/ready")
-    def ready():
-        return jsonify({"status": "ready", "version": VERSION})
-
+    # Register Blueprints
     from .routes.auth import auth_bp
     from .routes.dashboard import dashboard_bp
-    from .routes.superadmin import superadmin_bp
     from .routes.client import client_bp
+    from .routes.superadmin import superadmin_bp
     from .routes.masters import masters_bp
     from .routes.documents import documents_bp
+    from .routes.ledger import ledger_bp
     from .routes.reports import reports_bp
+    from .routes.exports import exports_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
-    app.register_blueprint(superadmin_bp)
     app.register_blueprint(client_bp)
+    app.register_blueprint(superadmin_bp)
     app.register_blueprint(masters_bp)
     app.register_blueprint(documents_bp)
+    app.register_blueprint(ledger_bp)
     app.register_blueprint(reports_bp)
+    app.register_blueprint(exports_bp)
 
     return app
