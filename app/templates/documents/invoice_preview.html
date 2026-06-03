@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
+
 <section>
-<h2>Tax Invoice</h2>
+<h2>Tax Invoice Preview</h2>
 
 <p><b>Invoice No:</b> {{ invoice.invoice_no }}</p>
 <p><b>Customer:</b> {{ invoice.customer_name }}</p>
@@ -13,6 +14,7 @@
 <tr>
 <th>#</th>
 <th>Product</th>
+<th>Description</th>
 <th>HSN</th>
 <th>Qty</th>
 <th>UOM</th>
@@ -21,18 +23,25 @@
 <th>Total</th>
 </tr>
 
-{% for item in invoice.items %}
+{% if invoice.items %}
+  {% for item in invoice.items %}
+  <tr>
+    <td>{{ loop.index }}</td>
+    <td>{{ item.product_name }}</td>
+    <td>{{ item.description }}</td>
+    <td>{{ item.hsn_code }}</td>
+    <td>{{ item.qty }}</td>
+    <td>{{ item.unit }}</td>
+    <td>{{ item.rate }}</td>
+    <td>{{ item.gst_percent }}</td>
+    <td>{{ item.line_total }}</td>
+  </tr>
+  {% endfor %}
+{% else %}
 <tr>
-<td>{{ loop.index }}</td>
-<td>{{ item.product_name }}</td>
-<td>{{ item.hsn_code }}</td>
-<td>{{ item.qty }}</td>
-<td>{{ item.unit }}</td>
-<td>{{ item.rate }}</td>
-<td>{{ item.gst_percent }}</td>
-<td>{{ item.line_total }}</td>
+<td colspan="9">No line items found.</td>
 </tr>
-{% endfor %}
+{% endif %}
 </table>
 
 <h3>Tax Summary</h3>
@@ -44,5 +53,7 @@
 <p><b>Grand Total: {{ invoice.grand_total }}</b></p>
 
 <button onclick="window.print()">Print / PDF</button>
+
 </section>
+
 {% endblock %}
