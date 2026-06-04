@@ -3,7 +3,7 @@
 
 <section>
 <h2>Tax Invoice Entry</h2>
-<p><b>V6.1.2:</b> 15 default line items, add more rows, saved invoice register, ledger/GST/Tally posting.</p>
+<p><b>V6.1.2:</b> Customer based ROC, 15 default line items, Ship To, custom invoice number, auto tax calculation.</p>
 
 <form method="POST" class="grid">
 
@@ -43,7 +43,16 @@
 <input id="customerPan" name="customer_pan" placeholder="PAN" readonly>
 <input id="customerEmail" name="customer_email" placeholder="Email" readonly>
 <input id="customerMobile" name="customer_mobile" placeholder="Phone" readonly>
+
+<label>Bill To Address</label>
 <textarea id="customerAddress" name="customer_address" placeholder="Bill To Address" readonly></textarea>
+
+<label>
+  <input type="checkbox" id="sameAsBill" checked>
+  Ship To same as Bill To
+</label>
+
+<label>Ship To Address</label>
 <textarea id="shippingAddress" name="shipping_address" placeholder="Ship To Address"></textarea>
 
 <div class="doc-section-title">Item Details with GST</div>
@@ -69,31 +78,32 @@
 </thead>
 
 <tbody id="itemsBody">
-{% for i in range(1, 16) %}
+{% for i in range(15) %}
 <tr class="item-row">
-  <td class="rowNo">{{ i }}</td>
+<td class="rowNo">{{ i + 1 }}</td>
 
-  <td>
-    <select class="productSelect" name="product_name[]">
-      <option value="">Select Product / Service</option>
-    </select>
-  </td>
+<td>
+<select class="productSelect" name="product_name[]">
+  <option value="">Select Product / Service</option>
+</select>
+</td>
 
-  <td><input name="description[]" placeholder="Description"></td>
-  <td><input class="hsnCode" name="hsn_code[]" placeholder="HSN/SAC" readonly></td>
-  <td><input class="qty" name="qty[]" type="number" step="0.01" value="1"></td>
-  <td><input class="unit" name="unit[]" placeholder="UOM" readonly></td>
-  <td><input class="rate" name="rate[]" type="number" step="0.01" value="0"></td>
-  <td><input class="discount" name="discount[]" type="number" step="0.01" value="0"></td>
-  <td><input class="gstPercent" name="gst_percent[]" type="number" step="0.01" value="0"></td>
-  <td><input class="cgst" name="cgst[]" readonly></td>
-  <td><input class="sgst" name="sgst[]" readonly></td>
-  <td><input class="igst" name="igst[]" readonly></td>
-  <td><input class="lineTotal" name="line_total[]" readonly></td>
-  <td><button type="button" onclick="removeRow(this)">Remove</button></td>
+<td><input name="description[]" placeholder="Description"></td>
+<td><input class="hsnCode" name="hsn_code[]" placeholder="HSN/SAC" readonly></td>
+<td><input class="qty" name="qty[]" type="number" step="0.01" value="1"></td>
+<td><input class="unit" name="unit[]" placeholder="UOM" readonly></td>
+<td><input class="rate" name="rate[]" type="number" step="0.01" value="0"></td>
+<td><input class="discount" name="discount[]" type="number" step="0.01" value="0"></td>
+<td><input class="gstPercent" name="gst_percent[]" type="number" step="0.01" value="0"></td>
+<td><input class="cgst" name="cgst[]" readonly></td>
+<td><input class="sgst" name="sgst[]" readonly></td>
+<td><input class="igst" name="igst[]" readonly></td>
+<td><input class="lineTotal" name="line_total[]" readonly></td>
+<td><button type="button" onclick="removeRow(this)">Remove</button></td>
 </tr>
 {% endfor %}
 </tbody>
+</table>
 
 <br>
 
@@ -140,6 +150,17 @@ document.getElementById("customInvoiceCheck").addEventListener("change", functio
   }
 });
 
+const sameAsBill = document.getElementById("sameAsBill");
+
+sameAsBill.addEventListener("change", function () {
+  if (this.checked) {
+    document.getElementById("shippingAddress").value =
+      document.getElementById("customerAddress").value;
+  } else {
+    document.getElementById("shippingAddress").value = "";
+  }
+});
+
 customerSelect.addEventListener("change", function () {
   const customerName = this.value;
   const customerRecord = contracts.find(c => c.customer_name === customerName);
@@ -150,7 +171,11 @@ customerSelect.addEventListener("change", function () {
     document.getElementById("customerEmail").value = customerRecord.customer_email || "";
     document.getElementById("customerMobile").value = customerRecord.customer_mobile || "";
     document.getElementById("customerAddress").value = customerRecord.customer_address || "";
-    document.getElementById("shippingAddress").value = customerRecord.customer_address || "";
+
+    if (document.getElementById("sameAsBill").checked) {
+      document.getElementById("shippingAddress").value =
+        customerRecord.customer_address || "";
+    }
   }
 
   refreshAllProductDropdowns();
@@ -167,16 +192,19 @@ function getProductsForCustomer() {
 
 function populateProductDropdown(select) {
   const currentValue = select.value;
+
   select.innerHTML = '<option value="">Select Product / Service</option>';
 
   getProductsForCustomer().forEach(c => {
     const option = document.createElement("option");
     option.value = c.product_name;
     option.textContent = c.product_name;
+
     option.dataset.hsn = c.hsn_code || "";
     option.dataset.unit = c.unit || "";
     option.dataset.rate = c.rate || "0";
     option.dataset.gst = c.gst_percent || "0";
+
     select.appendChild(option);
   });
 
