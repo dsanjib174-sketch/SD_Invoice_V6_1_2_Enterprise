@@ -15,6 +15,7 @@ TALLY_FILE = "tally_exports.json"
 CREDIT_NOTE_FILE = "credit_notes.json"
 RECEIPT_FILE = "receipts.json"
 PROFILE_FILE = "client_profiles.json"
+DELIVERY_CHALLAN_FILE = "delivery_challans.json"
 
 
 def _json_path(filename):
@@ -475,16 +476,55 @@ def receipts():
     )
 
 
+@documents_bp.route("/delivery-challan", methods=["GET", "POST"])
+@login_required
+def delivery_challan():
+    challans = load_json(DELIVERY_CHALLAN_FILE)
+    customers = get_customers_from_roc()
+
+    if request.method == "POST":
+        challan = {
+            "id": uuid.uuid4().hex,
+            "challan_no": (
+                request.form.get("challan_no", "").strip()
+                or generate_doc_no("DC", challans)
+            ),
+            "customer_name": request.form.get("customer_name", "").strip(),
+            "delivery_date": request.form.get("delivery_date", "").strip(),
+            "vehicle_no": request.form.get("vehicle_no", "").strip(),
+            "delivery_address": request.form.get("delivery_address", "").strip(),
+            "remarks": request.form.get("remarks", "").strip(),
+            "status": "Generated",
+            "client_email": current_user_email(),
+            "created_at": datetime.now().strftime("%d-%m-%Y %I:%M %p")
+        }
+
+        challans.insert(0, challan)
+        save_json(DELIVERY_CHALLAN_FILE, challans)
+
+        flash("Delivery Challan saved successfully.", "success")
+        return redirect(url_for("documents.delivery_challan"))
+
+    return render_template(
+        "documents/delivery_challan.html",
+        challans=visible_data(challans),
+        customers=customers,
+        doc_no=generate_doc_no("DC", challans)
+    )
+
+
 @documents_bp.route("/document-register")
 @login_required
 def document_register():
     invoices = visible_data(load_json(INVOICE_FILE))
     credit_notes = visible_data(load_json(CREDIT_NOTE_FILE))
     receipts_data = visible_data(load_json(RECEIPT_FILE))
+    challans = visible_data(load_json(DELIVERY_CHALLAN_FILE))
 
     return render_template(
         "documents/register.html",
         invoices=invoices,
         credit_notes=credit_notes,
-        receipts=receipts_data
+        receipts=receipts_data,
+        challans=challans
     )
