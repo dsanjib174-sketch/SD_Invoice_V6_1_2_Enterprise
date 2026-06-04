@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.credit-note-box {
+  background: #fff;
+  max-width: 850px;
+  margin: auto;
+  padding: 25px;
+  color: #000;
+  font-family: Arial, sans-serif;
+}
+
+.credit-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  border-bottom: 2px solid #000;
+  padding-bottom: 10px;
+}
+
+.credit-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.credit-table td,
+.credit-table th {
+  border: 1px solid #333;
+  padding: 8px;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .credit-note-box,
+  .credit-note-box * {
+    visibility: visible;
+  }
+
+  .credit-note-box {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  button,
+  aside,
+  nav,
+  header,
+  .sidebar,
+  .topbar,
+  .navbar {
+    display: none !important;
+  }
+}
+</style>
+
+<div class="credit-note-box">
+  <div class="credit-title">CREDIT NOTE</div>
+
+  <p><b>Credit Note No:</b> {{ note.credit_note_no }}</p>
+  <p><b>Against Invoice:</b> {{ note.invoice_no }}</p>
+  <p><b>Customer:</b> {{ note.customer_name }}</p>
+  <p><b>Date:</b> {{ note.created_at }}</p>
+
+  <table class="credit-table">
+    <tr>
+      <th>Reason</th>
+      <th>Amount</th>
+      <th>Status</th>
+    </tr>
+    <tr>
+      <td>{{ note.reason }}</td>
+      <td>{{ note.amount }}</td>
+      <td>{{ note.status }}</td>
+    </tr>
+  </table>
+
+  <br><br>
+  <p style="text-align:right;"><b>Authorized Signatory</b></p>
+</div>
+
+<button onclick="window.print()">Print / PDF</button>
+
+{% endblock %}
