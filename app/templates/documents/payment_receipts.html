@@ -2,27 +2,32 @@
 {% block content %}
 
 <section>
-<h2>Invoice Payment Receipts</h2>
+<h2>Invoice Received / Payment Receipts</h2>
 
 <form method="POST">
   <select name="invoice_id" required>
     <option value="">Select Invoice</option>
     {% for i in invoices %}
+    {% if i.status != "Cancelled" %}
     <option value="{{ i.id }}">
       {{ i.invoice_no }} - {{ i.customer_name }} - {{ i.grand_total }}
     </option>
+    {% endif %}
     {% endfor %}
   </select>
 
   <input name="amount_received" type="number" step="0.01" placeholder="Amount Received" required>
   <input name="payment_date" type="date">
+
   <select name="payment_mode">
     <option value="">Payment Mode</option>
     <option>Cash</option>
     <option>UPI</option>
     <option>NEFT</option>
     <option>Cheque</option>
+    <option>Card</option>
   </select>
+
   <input name="remarks" placeholder="Remarks">
   <button type="submit">Save Receipt</button>
 </form>
