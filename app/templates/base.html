@@ -32,25 +32,24 @@
       <a href="/subscription">Plan Expiry</a>
     {% endif %}
 
-    <a href="/company-profile">Company/Profile</a>
-    <a href="/branches">Branches</a>
-    <a href="/users">Users</a>
-
-    <a href="/masters">Masters</a>
-    <a href="/rate-contract">Rate Contract</a>
-
-    <a href="/quotation">Quotation</a>
-    <a href="/proforma">Proforma Invoice</a>
-    <a href="/invoice">Invoice</a>
-    <a href="/invoice-register">Saved Invoices</a>
-    <a href="/receipts">Invoice Received</a>
-    <a href="/delivery-challan">Delivery Challan</a>
-    <a href="/credit-note">Credit Note</a>
-    <a href="/document-register">Document Register</a>
-
-    <a href="/ledger">Ledger</a>
-    <a href="/gst-gsp">GST Reports</a>
-    <a href="/tally-sap">Tally/SAP Export</a>
+    {% if session.get('login_type') != 'superadmin' %}
+      <a href="/company-profile">Company/Profile</a>
+      <a href="/branches">Branches</a>
+      <a href="/users">Users</a>
+      <a href="/masters">Masters</a>
+      <a href="/rate-contract">Rate Contract</a>
+      <a href="/quotation">Quotation</a>
+      <a href="/proforma">Proforma Invoice</a>
+      <a href="/invoice">Invoice</a>
+      <a href="/invoice-register">Saved Invoices</a>
+      <a href="/receipts">Invoice Received</a>
+      <a href="/delivery-challan">Delivery Challan</a>
+      <a href="/credit-note">Credit Note</a>
+      <a href="/document-register">Document Register</a>
+      <a href="/ledger">Ledger</a>
+      <a href="/gst-gsp">GST Reports</a>
+      <a href="/tally-sap">Tally/SAP Export</a>
+    {% endif %}
 
     <a href="/communication">Communication</a>
     <a href="/change-password">Change Password</a>
