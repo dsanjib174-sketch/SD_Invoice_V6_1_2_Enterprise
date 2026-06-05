@@ -6,9 +6,9 @@
 
 <form method="POST" class="grid">
 
-<input name="challan_no" value="{{ doc_no }}" readonly>
+<input name="challan_no" value="{{ doc_no }}" placeholder="Delivery Challan No">
 
-<select name="customer_name" required>
+<select id="customerSelect" name="customer_name" required>
   <option value="">Select Customer</option>
   {% for c in customers %}
   <option value="{{ c }}">{{ c }}</option>
@@ -19,6 +19,38 @@
 <input name="vehicle_no" placeholder="Vehicle Number">
 <textarea name="delivery_address" placeholder="Delivery Address"></textarea>
 <textarea name="remarks" placeholder="Remarks"></textarea>
+
+<h3>Product Delivery Details</h3>
+
+<table border="1" cellpadding="8" cellspacing="0" width="100%" id="itemsTable">
+<thead>
+<tr>
+<th>#</th>
+<th>Product / Service</th>
+<th>Quantity</th>
+<th>Unit</th>
+<th>Remarks</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="itemsBody">
+{% for i in range(5) %}
+<tr class="item-row">
+<td class="rowNo">{{ i + 1 }}</td>
+<td><input name="product_name[]" placeholder="Product / Service Name"></td>
+<td><input name="qty[]" type="number" step="0.01" placeholder="Qty"></td>
+<td><input name="unit[]" placeholder="Unit"></td>
+<td><input name="item_remarks[]" placeholder="Item Remarks"></td>
+<td><button type="button" onclick="removeRow(this)">Remove</button></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<br>
+<button type="button" onclick="addRow()">+ Add Product Row</button>
+<br><br>
 
 <button type="submit">Save Delivery Challan</button>
 
@@ -57,5 +89,38 @@
 </table>
 
 </section>
+
+<script>
+function addRow() {
+  const body = document.getElementById("itemsBody");
+  const firstRow = document.querySelector(".item-row");
+  const newRow = firstRow.cloneNode(true);
+
+  newRow.querySelectorAll("input").forEach(input => {
+    input.value = "";
+  });
+
+  body.appendChild(newRow);
+  updateRowNumbers();
+}
+
+function removeRow(button) {
+  const rows = document.querySelectorAll(".item-row");
+
+  if (rows.length <= 1) {
+    alert("At least one product row is required.");
+    return;
+  }
+
+  button.closest("tr").remove();
+  updateRowNumbers();
+}
+
+function updateRowNumbers() {
+  document.querySelectorAll(".item-row").forEach((row, index) => {
+    row.querySelector(".rowNo").textContent = index + 1;
+  });
+}
+</script>
 
 {% endblock %}
