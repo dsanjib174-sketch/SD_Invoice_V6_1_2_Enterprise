@@ -1,20 +1,86 @@
 {% extends "base.html" %}
 {% block content %}
+
 <section>
 <h2>Client Management</h2>
+
 <form method="POST" class="grid">
-<input type="hidden" name="action" value="create">
-<input name="company" placeholder="Company" required>
-<input name="email" placeholder="Email" required>
-<input name="user_limit" placeholder="User Limit">
-<input name="branch_limit" placeholder="Branch Limit">
-<select name="plan_name" required><option value="">Select Plan</option>{% for p in plans %}<option value="{{ p.plan }}">{{ p.plan }} - ₹{{ p.price }}</option>{% endfor %}</select>
+
+<input name="company" placeholder="Company Name" required>
+<input name="email" type="email" placeholder="Client Login Email" required>
+<input name="password" placeholder="Client Login Password" required>
+
+<select name="plan_name">
+  <option value="">Select Plan</option>
+  {% for p in plans %}
+    <option value="{{ p.plan }}">
+      {{ p.plan }} - Users {{ p.user_limit }} - Branches {{ p.branch_limit }} - Invoices {{ p.invoice_limit }}
+    </option>
+  {% endfor %}
+</select>
+
+<input name="user_limit" placeholder="User Limit" value="1">
+<input name="branch_limit" placeholder="Branch Limit" value="1">
+<input name="invoice_limit" placeholder="Invoice Limit" value="100">
+
+<label>Active Date</label>
+<input type="date" name="active_date">
+
+<label>Expire Date</label>
+<input type="date" name="expire_date">
+
+<input name="expire_comment" placeholder="Expire Date Change Comment">
+
+<select name="status">
+  <option>Active</option>
+  <option>Inactive</option>
+  <option>Suspended</option>
+</select>
+
 <button type="submit">Create Client</button>
+
 </form>
+
 <br>
+
+<h3>Created Clients</h3>
+
 <table border="1" cellpadding="8" cellspacing="0" width="100%">
-<tr><th>Company</th><th>Email</th><th>Plan</th><th>Active Date</th><th>Expire Date</th><th>Status</th><th>Edit Expiry</th></tr>
-{% if clients %}{% for c in clients %}<tr><td>{{ c.company }}</td><td>{{ c.email }}</td><td>{{ c.plan_name }}</td><td>{{ c.active_date }}</td><td>{{ c.expire_date }}</td><td>{{ c.status }}</td><td><form method="POST"><input type="hidden" name="action" value="edit_expiry"><input type="hidden" name="client_id" value="{{ c.id }}"><input type="date" name="new_expire_date" value="{{ c.expire_date }}" required><input type="text" name="comment" placeholder="Reason/comment required" required><button type="submit">Update</button></form>{% if c.expiry_edit_comment %}<small>Last Comment: {{ c.expiry_edit_comment }}</small>{% endif %}</td></tr>{% endfor %}{% else %}<tr><td colspan="7">No records.</td></tr>{% endif %}
+<tr>
+<th>Company</th>
+<th>Email</th>
+<th>Plan</th>
+<th>Users</th>
+<th>Branches</th>
+<th>Invoices</th>
+<th>Active Date</th>
+<th>Expire Date</th>
+<th>Status</th>
+<th>Created At</th>
+</tr>
+
+{% if clients %}
+{% for c in clients %}
+<tr>
+<td>{{ c.company }}</td>
+<td>{{ c.email }}</td>
+<td>{{ c.plan_name }}</td>
+<td>{{ c.user_limit }}</td>
+<td>{{ c.branch_limit }}</td>
+<td>{{ c.invoice_limit }}</td>
+<td>{{ c.active_date }}</td>
+<td>{{ c.expire_date }}</td>
+<td>{{ c.status }}</td>
+<td>{{ c.created_at }}</td>
+</tr>
+{% endfor %}
+{% else %}
+<tr>
+<td colspan="10">No clients found.</td>
+</tr>
+{% endif %}
 </table>
+
 </section>
+
 {% endblock %}
