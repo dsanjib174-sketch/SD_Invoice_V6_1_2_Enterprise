@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+
+<section>
+<h2>User Management</h2>
+
+<form method="POST" class="grid">
+
+<input name="name" placeholder="User Name" required>
+<input name="email" type="email" placeholder="User Email" required>
+<input name="password" placeholder="Password" required>
+
+<select name="role">
+  <option value="user">User</option>
+  <option value="admin">Admin</option>
+  <option value="billing">Billing User</option>
+  <option value="viewer">Viewer</option>
+</select>
+
+<input name="branch" placeholder="Branch">
+
+<select name="status">
+  <option>Active</option>
+  <option>Inactive</option>
+  <option>Suspended</option>
+</select>
+
+{% if is_superadmin %}
+<select name="client_email" required>
+  <option value="">Select Client</option>
+  {% for c in clients %}
+    <option value="{{ c.email }}">{{ c.company }} - {{ c.email }}</option>
+  {% endfor %}
+</select>
+{% endif %}
+
+<button type="submit">Create User</button>
+
+</form>
+
+<br>
+
+<table border="1" cellpadding="8" cellspacing="0" width="100%">
+<tr>
+<th>Name</th>
+<th>Email</th>
+<th>Role</th>
+<th>Branch</th>
+<th>Status</th>
+<th>Client</th>
+<th>Created At</th>
+</tr>
+
+{% if users %}
+{% for u in users %}
+<tr>
+<td>{{ u.name }}</td>
+<td>{{ u.email }}</td>
+<td>{{ u.role }}</td>
+<td>{{ u.branch }}</td>
+<td>{{ u.status }}</td>
+<td>{{ u.client_email }}</td>
+<td>{{ u.created_at }}</td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="7">No users found.</td></tr>
+{% endif %}
+</table>
+
+</section>
+
+{% endblock %}
