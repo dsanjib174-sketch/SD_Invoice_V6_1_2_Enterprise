@@ -16,24 +16,21 @@ CREDIT_NOTE_FILE = "credit_notes.json"
 RECEIPT_FILE = "receipts.json"
 PROFILE_FILE = "client_profiles.json"
 DELIVERY_CHALLAN_FILE = "delivery_challans.json"
+AUDIT_FILE = "audit_logs.json"
 
 
 def _json_path(filename):
     upload_folder = current_app.config.get("UPLOAD_FOLDER")
-
     if not upload_folder:
         upload_folder = os.path.join(current_app.root_path, "data")
-
     os.makedirs(upload_folder, exist_ok=True)
     return os.path.join(upload_folder, filename)
 
 
 def load_json(filename):
     path = _json_path(filename)
-
     if not os.path.exists(path):
         return []
-
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -44,7 +41,6 @@ def load_json(filename):
 def save_json(filename, data):
     path = _json_path(filename)
     os.makedirs(os.path.dirname(path), exist_ok=True)
-
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
@@ -54,37 +50,41 @@ def current_user_email():
 
 
 def is_superadmin():
-    return (
-        session.get("login_type") == "superadmin"
-        or session.get("role") == "superadmin"
-    )
+    return session.get("login_type") == "superadmin" or session.get("role") == "superadmin"
 
 
 def visible_data(data):
     if is_superadmin():
         return data
+    return [d for d in data if d.get("client_email") == current_user_email()]
 
-    return [
-        d for d in data
-        if d.get("client_email") == current_user_email()
-    ]
+
+def add_audit(action, document_type, document_no, customer_name="", amount="0", client_email=None):
+    logs = load_json(AUDIT_FILE)
+    logs.insert(0, {
+        "id": uuid.uuid4().hex,
+        "action": action,
+        "document_type": document_type,
+        "document_no": document_no,
+        "customer_name": customer_name,
+        "amount": amount,
+        "client_email": client_email or current_user_email(),
+        "created_by": current_user_email(),
+        "created_at": datetime.now().strftime("%d-%m-%Y %I:%M %p")
+    })
+    save_json(AUDIT_FILE, logs)
 
 
 def get_client_profile(client_email):
     profiles = load_json(PROFILE_FILE)
-    return next(
-        (p for p in profiles if p.get("client_email") == client_email),
-        {}
-    )
+    return next((p for p in profiles if p.get("client_email") == client_email), {})
 
 
 def get_financial_year():
     today = datetime.now()
     y = today.year
-
     if today.month >= 4:
         return f"{str(y)[-2:]}-{str(y + 1)[-2:]}"
-
     return f"{str(y - 1)[-2:]}-{str(y)[-2:]}"
 
 
@@ -94,7 +94,6 @@ def generate_doc_no(prefix, records):
 
 def get_customers_from_roc():
     contracts = visible_data(load_json(ROC_FILE))
-
     return sorted(set([
         c.get("customer_name")
         for c in contracts
@@ -215,10 +214,7 @@ def invoice():
     user_email = current_user_email()
 
     if request.method == "POST":
-        invoice_no = (
-            request.form.get("invoice_no", "").strip()
-            or generate_doc_no("INV", invoices)
-        )
+        invoice_no = request.form.get("invoice_no", "").strip() or generate_doc_no("INV", invoices)
 
         product_names = request.form.getlist("product_name[]")
         descriptions = request.form.getlist("description[]")
@@ -234,7 +230,6 @@ def invoice():
         totals = request.form.getlist("line_total[]")
 
         items = []
-
         for i in range(len(product_names)):
             if product_names[i].strip():
                 items.append({
@@ -265,7 +260,6 @@ def invoice():
             "po_date": request.form.get("po_date", ""),
             "place_of_supply": request.form.get("place_of_supply", ""),
             "payment_terms": request.form.get("payment_terms", ""),
-
             "customer_name": request.form.get("customer_name", ""),
             "customer_gst": request.form.get("customer_gst", ""),
             "customer_pan": request.form.get("customer_pan", ""),
@@ -273,9 +267,7 @@ def invoice():
             "customer_mobile": request.form.get("customer_mobile", ""),
             "customer_address": request.form.get("customer_address", ""),
             "shipping_address": request.form.get("shipping_address", ""),
-
             "items": items,
-
             "taxable_amount": request.form.get("taxable_amount", "0"),
             "cgst": request.form.get("cgst_total", "0"),
             "sgst": request.form.get("sgst_total", "0"),
@@ -286,7 +278,6 @@ def invoice():
             "amount_words": request.form.get("amount_words", ""),
             "terms": request.form.get("terms", ""),
             "notes": request.form.get("notes", ""),
-
             "status": "Generated",
             "client_email": user_email,
             "created_by": user_email,
@@ -296,16 +287,12 @@ def invoice():
         invoices.insert(0, invoice_data)
         save_json(INVOICE_FILE, invoices)
         post_invoice(invoice_data)
+        add_audit("Created", "Invoice", invoice_no, invoice_data["customer_name"], invoice_data["grand_total"], user_email)
 
         flash("Invoice saved and posted to Ledger, GST and Tally/SAP.", "success")
         return redirect(url_for("documents.invoice_register"))
 
-    return render_template(
-        "documents/invoice.html",
-        customers=customers,
-        contracts=contracts,
-        doc_no=generate_doc_no("INV", invoices)
-    )
+    return render_template("documents/invoice.html", customers=customers, contracts=contracts, doc_no=generate_doc_no("INV", invoices))
 
 
 @documents_bp.route("/invoice-register")
@@ -318,24 +305,13 @@ def invoice_register():
 @documents_bp.route("/invoice/preview/<string:invoice_id>")
 @login_required
 def invoice_preview(invoice_id):
-    invoice_data = next(
-        (
-            i for i in visible_data(load_json(INVOICE_FILE))
-            if i.get("id") == invoice_id
-        ),
-        None
-    )
-
+    invoice_data = next((i for i in visible_data(load_json(INVOICE_FILE)) if i.get("id") == invoice_id), None)
     if not invoice_data:
         return "Invoice not found", 404
 
     client_profile = get_client_profile(invoice_data.get("client_email", ""))
 
-    return render_template(
-        "documents/invoice_preview.html",
-        invoice=invoice_data,
-        client_profile=client_profile
-    )
+    return render_template("documents/invoice_preview.html", invoice=invoice_data, client_profile=client_profile)
 
 
 @documents_bp.route("/invoice/cancel/<string:invoice_id>", methods=["POST"])
@@ -347,7 +323,6 @@ def cancel_invoice(invoice_id):
 
     for inv in invoices:
         if inv.get("id") == invoice_id:
-
             if not is_superadmin() and inv.get("client_email") != user_email:
                 flash("You cannot cancel another client's invoice.", "error")
                 return redirect(url_for("documents.invoice_register"))
@@ -377,6 +352,8 @@ def cancel_invoice(invoice_id):
 
             credit_notes.insert(0, credit_note)
             reverse_invoice(inv, credit_note)
+            add_audit("Cancelled", "Invoice", inv.get("invoice_no"), inv.get("customer_name"), inv.get("grand_total"), inv.get("client_email"))
+            add_audit("Created", "Credit Note", credit_note["credit_note_no"], credit_note["customer_name"], credit_note["amount"], credit_note["client_email"])
             break
 
     save_json(INVOICE_FILE, invoices)
@@ -390,30 +367,16 @@ def cancel_invoice(invoice_id):
 @login_required
 def credit_note():
     notes = visible_data(load_json(CREDIT_NOTE_FILE))
-    return render_template(
-        "documents/credit_note.html",
-        notes=notes
-    )
+    return render_template("documents/credit_note.html", notes=notes)
 
 
 @documents_bp.route("/credit-note/preview/<string:note_id>")
 @login_required
 def credit_note_preview(note_id):
-    note = next(
-        (
-            n for n in visible_data(load_json(CREDIT_NOTE_FILE))
-            if n.get("id") == note_id
-        ),
-        None
-    )
-
+    note = next((n for n in visible_data(load_json(CREDIT_NOTE_FILE)) if n.get("id") == note_id), None)
     if not note:
         return "Credit note not found", 404
-
-    return render_template(
-        "documents/credit_note_preview.html",
-        note=note
-    )
+    return render_template("documents/credit_note_preview.html", note=note)
 
 
 @documents_bp.route("/receipts", methods=["GET", "POST"])
@@ -425,15 +388,12 @@ def receipts():
 
     if request.method == "POST":
         invoice_id = request.form.get("invoice_id")
-        invoice_data = next(
-            (i for i in invoices if i.get("id") == invoice_id),
-            None
-        )
+        invoice_data = next((i for i in invoices if i.get("id") == invoice_id), None)
 
         if invoice_data:
             amount_received = request.form.get("amount_received", "0")
 
-            receipts_data.insert(0, {
+            receipt = {
                 "id": uuid.uuid4().hex,
                 "receipt_no": generate_doc_no("RCPT", receipts_data),
                 "invoice_id": invoice_data.get("id"),
@@ -445,10 +405,11 @@ def receipts():
                 "remarks": request.form.get("remarks", ""),
                 "client_email": user_email,
                 "created_at": datetime.now().strftime("%d-%m-%Y %I:%M %p")
-            })
+            }
+
+            receipts_data.insert(0, receipt)
 
             ledger = load_json(LEDGER_FILE)
-
             ledger.insert(0, {
                 "id": uuid.uuid4().hex,
                 "invoice_no": invoice_data.get("invoice_no"),
@@ -459,21 +420,18 @@ def receipts():
                 "type": "Receipt",
                 "status": "Received",
                 "client_email": user_email,
-                "created_at": datetime.now().strftime("%d-%m-%Y %I:%M %p")
+                "created_at": receipt["created_at"]
             })
 
             save_json(RECEIPT_FILE, receipts_data)
             save_json(LEDGER_FILE, ledger)
+            add_audit("Created", "Receipt", receipt["receipt_no"], receipt["customer_name"], amount_received, user_email)
 
             flash("Receipt saved successfully and posted to ledger.", "success")
 
         return redirect(url_for("documents.receipts"))
 
-    return render_template(
-        "documents/payment_receipts.html",
-        receipts=visible_data(receipts_data),
-        invoices=invoices
-    )
+    return render_template("documents/payment_receipts.html", receipts=visible_data(receipts_data), invoices=invoices)
 
 
 @documents_bp.route("/delivery-challan", methods=["GET", "POST"])
@@ -481,19 +439,35 @@ def receipts():
 def delivery_challan():
     challans = load_json(DELIVERY_CHALLAN_FILE)
     customers = get_customers_from_roc()
+    contracts = visible_data(load_json(ROC_FILE))
 
     if request.method == "POST":
+        product_names = request.form.getlist("product_name[]")
+        qtys = request.form.getlist("qty[]")
+        units = request.form.getlist("unit[]")
+        remarks_list = request.form.getlist("item_remarks[]")
+
+        items = []
+        for i in range(len(product_names)):
+            if product_names[i].strip():
+                items.append({
+                    "product_name": product_names[i].strip(),
+                    "qty": qtys[i].strip() if i < len(qtys) else "",
+                    "unit": units[i].strip() if i < len(units) else "",
+                    "remarks": remarks_list[i].strip() if i < len(remarks_list) else ""
+                })
+
+        challan_no = request.form.get("challan_no", "").strip() or generate_doc_no("DC", challans)
+
         challan = {
             "id": uuid.uuid4().hex,
-            "challan_no": (
-                request.form.get("challan_no", "").strip()
-                or generate_doc_no("DC", challans)
-            ),
+            "challan_no": challan_no,
             "customer_name": request.form.get("customer_name", "").strip(),
             "delivery_date": request.form.get("delivery_date", "").strip(),
             "vehicle_no": request.form.get("vehicle_no", "").strip(),
             "delivery_address": request.form.get("delivery_address", "").strip(),
             "remarks": request.form.get("remarks", "").strip(),
+            "items": items,
             "status": "Generated",
             "client_email": current_user_email(),
             "created_at": datetime.now().strftime("%d-%m-%Y %I:%M %p")
@@ -501,16 +475,12 @@ def delivery_challan():
 
         challans.insert(0, challan)
         save_json(DELIVERY_CHALLAN_FILE, challans)
+        add_audit("Created", "Delivery Challan", challan_no, challan["customer_name"], "0", challan["client_email"])
 
         flash("Delivery Challan saved successfully.", "success")
         return redirect(url_for("documents.delivery_challan"))
 
-    return render_template(
-        "documents/delivery_challan.html",
-        challans=visible_data(challans),
-        customers=customers,
-        doc_no=generate_doc_no("DC", challans)
-    )
+    return render_template("documents/delivery_challan.html", challans=visible_data(challans), customers=customers, contracts=contracts, doc_no=generate_doc_no("DC", challans))
 
 
 @documents_bp.route("/document-register")
@@ -521,10 +491,4 @@ def document_register():
     receipts_data = visible_data(load_json(RECEIPT_FILE))
     challans = visible_data(load_json(DELIVERY_CHALLAN_FILE))
 
-    return render_template(
-        "documents/register.html",
-        invoices=invoices,
-        credit_notes=credit_notes,
-        receipts=receipts_data,
-        challans=challans
-    )
+    return render_template("documents/register.html", invoices=invoices, credit_notes=credit_notes, receipts=receipts_data, challans=challans)
