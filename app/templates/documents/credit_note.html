@@ -27,14 +27,19 @@
 <td>{{ n.status }}</td>
 <td>{{ n.created_at }}</td>
 <td>
-  <a href="/credit-note/preview/{{ n.id }}">Print</a>
+  <a href="/credit-note/preview/{{ n.id }}">
+    <button type="button">Print</button>
+  </a>
 </td>
 </tr>
 {% endfor %}
 {% else %}
-<tr><td colspan="8">No credit notes found.</td></tr>
+<tr>
+<td colspan="8">No credit notes found.</td>
+</tr>
 {% endif %}
 </table>
+
 </section>
 
 {% endblock %}
