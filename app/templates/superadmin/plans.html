@@ -1,20 +1,89 @@
 {% extends "base.html" %}
 {% block content %}
+
 <section>
 <h2>Plans Management</h2>
+
 <form method="POST" class="grid">
-<input type="hidden" name="action" value="add">
-<input name="plan" placeholder="Plan Name" required>
-<input name="price" placeholder="Price" required>
-<input name="user_limit" placeholder="User Limit" required>
-<input name="branch_limit" placeholder="Branch Limit" required>
-<input name="invoice_limit" placeholder="Invoice Limit" required>
-<button type="submit">Save Plan</button>
+  <input type="hidden" name="plan_id" id="plan_id">
+
+  <input name="plan" id="plan" placeholder="Plan Name" required>
+  <input name="price" id="price" placeholder="Price" required>
+  <input name="user_limit" id="user_limit" placeholder="User Limit" required>
+  <input name="branch_limit" id="branch_limit" placeholder="Branch Limit" required>
+  <input name="invoice_limit" id="invoice_limit" placeholder="Invoice Limit" required>
+  <input name="validity_days" id="validity_days" placeholder="Validity Days" required>
+
+  <select name="status" id="status">
+    <option>Active</option>
+    <option>Inactive</option>
+  </select>
+
+  <button type="submit">Save Plan</button>
 </form>
+
 <br>
+
 <table border="1" cellpadding="8" cellspacing="0" width="100%">
-<tr><th>Plan</th><th>Price</th><th>User Limit</th><th>Branch Limit</th><th>Invoice Limit</th><th>Validity</th><th>Status</th><th>Action</th></tr>
-{% if plans %}{% for p in plans %}<tr><form method="POST"><input type="hidden" name="action" value="update"><input type="hidden" name="plan_id" value="{{ p.id }}"><td><input name="plan" value="{{ p.plan }}" required></td><td><input name="price" value="{{ p.price }}" required></td><td><input name="user_limit" value="{{ p.user_limit }}" required></td><td><input name="branch_limit" value="{{ p.branch_limit }}" required></td><td><input name="invoice_limit" value="{{ p.invoice_limit }}" required></td><td>1 Year</td><td><select name="status"><option value="Active" {% if p.status == 'Active' %}selected{% endif %}>Active</option><option value="Inactive" {% if p.status == 'Inactive' %}selected{% endif %}>Inactive</option></select></td><td><button type="submit">Update</button></td></form></tr>{% endfor %}{% else %}<tr><td colspan="8">No plans found.</td></tr>{% endif %}
+<tr>
+<th>Plan</th>
+<th>Price</th>
+<th>User Limit</th>
+<th>Branch Limit</th>
+<th>Invoice Limit</th>
+<th>Validity</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+
+{% if plans %}
+  {% for p in plans %}
+  <tr>
+    <td>{{ p.plan }}</td>
+    <td>{{ p.price }}</td>
+    <td>{{ p.user_limit }}</td>
+    <td>{{ p.branch_limit }}</td>
+    <td>{{ p.invoice_limit }}</td>
+    <td>{{ p.validity_days }} Days</td>
+    <td>{{ p.status }}</td>
+    <td>
+      <button type="button"
+        onclick="editPlan(
+          '{{ p.id }}',
+          '{{ p.plan }}',
+          '{{ p.price }}',
+          '{{ p.user_limit }}',
+          '{{ p.branch_limit }}',
+          '{{ p.invoice_limit }}',
+          '{{ p.validity_days }}',
+          '{{ p.status }}'
+        )">
+        Edit
+      </button>
+    </td>
+  </tr>
+  {% endfor %}
+{% else %}
+<tr>
+<td colspan="8">No plans found.</td>
+</tr>
+{% endif %}
 </table>
+
 </section>
+
+<script>
+function editPlan(id, plan, price, userLimit, branchLimit, invoiceLimit, validityDays, status) {
+  document.getElementById("plan_id").value = id;
+  document.getElementById("plan").value = plan;
+  document.getElementById("price").value = price;
+  document.getElementById("user_limit").value = userLimit;
+  document.getElementById("branch_limit").value = branchLimit;
+  document.getElementById("invoice_limit").value = invoiceLimit;
+  document.getElementById("validity_days").value = validityDays;
+  document.getElementById("status").value = status;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+</script>
+
 {% endblock %}
